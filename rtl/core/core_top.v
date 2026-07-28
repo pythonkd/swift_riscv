@@ -2,8 +2,8 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-07-18 22:43:50
- * @FilePath: /kun_riscv/rtl/core_top.v
+ * @LastEditTime: 2026-07-28 22:11:12
+ * @FilePath: /SwiftRiscv/rtl/core/core_top.v
  * @Description: 
  * 
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
@@ -11,27 +11,25 @@
 
 module core_top (
     input clk,
-    input reset_n
+    input rst_n
 );
 
     wire stop;
-    wire branch;
     wire reg_we;
-    wire mem_re;
     wire mem_we;
+    wire csr_we;
     wire jump_en;
-    wire zero;
+    wire div_op_start;
     wire data_err;
     wire instruction_err;
     wire instruction_decode_err;
     wire [`REG_WIDTH - 1:0]mem_rd_data;
     wire [`REG_WIDTH - 1:0]mem_addr;
-    wire [`REG_WIDTH - 1:0]mem_w_data;
-    wire [`ALU_OP_LENGTH_WIDTH - 1: 0]len;
-    wire [`ALU_TYPE_WIDTH - 1: 0]alu_type;
-    wire [`ALU_OP_WIDTH - 1: 0]alu_op;
+    wire [`REG_WIDTH - 1:0]mem_wr_data;
     wire [`INST_RD_WIDTH  - 1: 0]rd_index;
     wire [`REG_WIDTH - 1: 0]rd_data;
+    wire [`REG_WIDTH - 1: 0]csr_rd_data;
+    wire [`REG_WIDTH - 1: 0]csr_wr_data;
     wire [`INST_JUMP_WIDTH - 1: 0]jump;
     wire [`REG_WIDTH - 1: 0]cur_pc;
     wire [`REG_WIDTH - 1: 0]nx_pc;
@@ -42,12 +40,22 @@ module core_top (
     wire [`INST_RS1_WIDTH  - 1: 0]rs2_index;
     wire [`REG_WIDTH - 1: 0]rs1_data;
     wire [`REG_WIDTH - 1: 0]rs2_data;
+    wire [`INST_CSR_WIDTH - 1: 0]csr_rd_addr;
+    wire [`INST_CSR_WIDTH - 1: 0]csr_wr_addr;
+    wire global_int_en;
+    wire mtimer_int_en;
+    wire ex_int_en;
+    wire clint_we;
+    wire [`INST_CSR_WIDTH - 1: 0]clint_rd_addr;
+    wire [`INST_CSR_WIDTH - 1: 0]clint_wr_addr;
+    wire [`REG_WIDTH - 1: 0]clint_wr_data;
+    wire [`REG_WIDTH - 1: 0]clint_rd_data;
 
     assign cpu_err = {{(`CPU_ERR_WIDTH - 3){1'b0}}, instruction_decode_err, data_err, instruction_err};
     pc_reg u_pc_reg(
         //input
         .clk(clk),
-        .reset_n(reset_n),
+        .rst_n(rst_n),
         .nx_pc(nx_pc),
         .cpu_err(cpu_err),
         //output
@@ -59,7 +67,6 @@ module core_top (
         // input
         .stop(stop),
         .pc(cur_pc),
-        .branch(branch),
         .imm(imm),
         .rs1_data(rs1_data),
         .jump(jump),
@@ -79,9 +86,9 @@ module core_top (
     d_lm u_dlm(
         //input
         .clk(clk),
+        .rst_n(rst_n),
         .mem_addr(mem_addr),
-        .mem_w_data(mem_w_data),
-        .mem_re(mem_re),
+        .mem_wr_data(mem_wr_data),
         .mem_we(mem_we),
         //output
         .mem_rd_data(mem_rd_data),
@@ -91,54 +98,70 @@ module core_top (
     reg_file u_reg_file(
         //input
         .clk(clk),
-        .reset_n(reset_n),
+        .rst_n(rst_n),
         .reg_we(reg_we),
-        .reg_index(rd_index),
-        .reg_data(rd_data),
-        .reg1_index(rs1_index),
-        .reg2_index(rs2_index),
+        .rd_index(rd_index),
+        .rd_data(rd_data),
+        .rs1_index(rs1_index),
+        .rs2_index(rs2_index),
         //output
-        .reg1_data(rs1_data),
-        .reg2_data(rs2_data)
+        .rs1_data(rs1_data),
+        .rs2_data(rs2_data)
     );
 
     decode u_decode(
         //input
         .instruction(instruction),
         //output
-        .mem_re(mem_re),
-        .zero(zero),
-        .branch(branch),        
-        .jump(jump),
-        .imm(imm),
-        .reg_index(rd_index),
-        .reg1_index(rs1_index),
-        .reg2_index(rs2_index),
-        .alu_op(alu_op),
-        .alu_type(alu_type),
-        .len(len),
+        .csr_index(csr_rd_addr),
+        .rd_index(rd_index),
+        .rs1_index(rs1_index),
+        .rs2_index(rs2_index),
         .instruction_decode_err(instruction_decode_err)
     );
 
     alu u_alu(
         //input
-        .imm(imm),
-        .pc(cur_pc),
-        .zero(zero),
-        .reg1_data(rs1_data),
-        .reg2_data(rs2_data),
-        .alu_op(alu_op),
-        .alu_type(alu_type),
-        .len(len),
+        .clk(clk),
+        .rst_n(rst_n),
+        .instruction(instruction),
+        .instruction_addr(cur_pc),
+        .rs1_data(rs1_data),
+        .rs2_data(rs2_data),
+        .csr_rd_data(csr_rd_data),
         .mem_rd_data(mem_rd_data),
         //output
         .reg_we(reg_we),
         .mem_we(mem_we),
+        .csr_we(csr_we),
         .jump_en(jump_en),
-        .reg_data(rd_data),
-        .mem_w_data(mem_w_data),
-        .mem_addr(mem_addr)
+        .div_op_start(div_op_start),
+        .jump(jump),
+        .imm(imm), 
+        .rd_data(rd_data),
+        .mem_wr_data(mem_wr_data),
+        .mem_addr(mem_addr),
+        .csr_wr_data(csr_wr_data),
+        .csr_wr_addr(csr_wr_addr)
     );
-   
+
+    csr_reg u_csr_reg(
+        // input
+        .clk(clk),
+        .rst_n(rst_n),
+        .ex_we(csr_we),
+        .csr_rd_addr(csr_rd_addr),
+        .csr_wr_addr(csr_wr_addr),
+        .clint_we(clint_we),
+        .clint_rd_addr(clint_rd_addr),
+        .clint_wr_addr(clint_wr_addr),
+        .clint_wr_data(clint_wr_data),
+        //output
+        .global_int_en(global_int_en),
+        .mtimer_int_en(mtimer_int_en),
+        .ex_int_en(ex_int_en),
+        .csr_rd_data(csr_rd_data),
+        .clint_rd_data(clint_rd_data)
+    );
 
 endmodule

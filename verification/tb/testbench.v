@@ -3,7 +3,7 @@
  * @Date: 2026-07-12 16:09:51
  * @LastEditors: pythonkd 1181878670@qq.com
  * @LastEditTime: 2026-07-19 12:01:49
- * @FilePath: /kun_riscv/verification/tb/testbench.v
+ * @FilePath: /SwiftRiscv/verification/tb/testbench.v
  * @Description: 
  * 
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
@@ -11,7 +11,7 @@
 
 // `include "kun_riscv_defines.v"
 
-module kun_riscv ();
+module SwiftRiscv ();
 
 reg                  clk;
 reg                  rst_n;
@@ -137,7 +137,7 @@ endtask
 
 core_top u_core_top(
     .clk                            ( clk                           ),
-    .reset_n                          ( rst_n                         )
+    .rst_n                          ( rst_n                         )
 );
 
 // iverilog 

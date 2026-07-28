@@ -3,7 +3,7 @@
  * @Date: 2026-07-12 17:01:28
  * @LastEditors: pythonkd 1181878670@qq.com
  * @LastEditTime: 2026-07-18 18:52:12
- * @FilePath: /kun_riscv/rtl/instruction_lm.v
+ * @FilePath: /SwiftRiscv/rtl/instruction_lm.v
  * @Description: 
  * 
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
@@ -17,7 +17,7 @@
  );
  
    reg [`INST_WIDTH-1: 0]local_mem[0:`INST_MEM_DEPTH-1];
-   
+
    assign instruction_err = pc[`INST_MEM_WIDTH+1: 2] > `INST_MEM_DEPTH-1 ? 1 : 0;
    always @(*)
    if (instruction_err)

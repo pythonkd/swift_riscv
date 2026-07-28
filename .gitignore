@@ -8,3 +8,5 @@ verification/sim/*.fsdb
 verification/sim/*.vcd
 verification/sim/simv
 verification/sim/*.key
+.ver*
+*.tar.gz
