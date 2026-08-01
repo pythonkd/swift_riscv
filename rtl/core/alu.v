@@ -2,8 +2,8 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-07-28 22:28:25
- * @FilePath: /SwiftRiscv/rtl/core/alu.v
+ * @LastEditTime: 2026-08-01 15:49:57
+ * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 
  * 
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
@@ -23,8 +23,8 @@ module alu(
     output reg csr_we,
     output reg jump_en,
     output reg div_op_start,
+    output reg hold_flag,
     output reg [`INST_JUMP_WIDTH - 1: 0]jump,
-    output reg [`INST_RS1_WIDTH  - 1: 0]rd_index,
     output reg [`REG_WIDTH - 1: 0]imm,
     output reg [`REG_WIDTH - 1: 0]rd_data,
     output reg [`REG_WIDTH - 1:0]mem_wr_data,
@@ -40,24 +40,40 @@ module alu(
     wire [`INST_FUNC7_WIDTH - 1: 0]func7 = instruction[`INST_FUNC7_BASE + `INST_FUNC7_WIDTH - 1: `INST_FUNC7_BASE];
     wire [`INST_FUNC5_WIDTH - 1: 0]func5 = instruction[`INST_FUNC5_BASE + `INST_FUNC5_WIDTH - 1: `INST_FUNC5_BASE];
     wire [`INST_CSR_WIDTH - 1:0] csr = instruction[`INST_CSR_BASE+`INST_CSR_WIDTH-1:`INST_CSR_BASE];
-    reg [`REG_WIDTH - 1: 0]mul_op0;
-    reg [`REG_WIDTH - 1: 0]mul_op1;
 
-    always@(*) begin
-        mul_op0 = `REG_WIDTH'b0;
-        mul_op1 = `REG_WIDTH'b0;
-        rd_data = `REG_WIDTH'b0;
-        reg_we = 1'b0;
-        mem_addr = `REG_WIDTH'b0;
-        mem_we = 1'b0;
-        mem_wr_data = `REG_WIDTH'b0;
-        jump_en = 1'b0;
-        jump = `INST_JUMP_WIDTH'b0;
+    // EI, ECALL/EBREAK
+    always @(*) begin
+        case (opcode)
+            `INST_OPCODE_EI_TYPE: begin
+                reg_we = 1'b0;
+                mem_we = 1'b0;
+                csr_we = 1'b0;
+                jump_en = 1'b0;
+            end
+        endcase
+    end
+    // FENCE
+    always @(*) begin
+        case (opcode)
+            `INST_OPCODE_FENCE_TYPE: begin
+                reg_we = 1'b0;
+                mem_we = 1'b0;
+                csr_we = 1'b0;
+                jump_en = 1'b0;
+            end
+        endcase
+    end
+
+    // OP R except mul
+    always @(*) begin
         case (opcode)
             `INST_OPCODE_R_TYPE: begin
-                rd_index = rd;
                 case(func7)
                     `INST_R_FUNC7_BASE_TYPE0: begin
+                        reg_we = 1'b1;
+                        mem_we = 1'b0;
+                        csr_we = 1'b0;
+                        jump_en = 1'b0;
                         case(func3)
                             `INST_OPCODE_R_ADD: begin
                                 rd_data = rs1_data + rs2_data;
@@ -84,9 +100,12 @@ module alu(
                                 rd_data = rs1_data < rs2_data ? `REG_WIDTH'b1 : `REG_WIDTH'b0;
                             end
                         endcase
-                        reg_we = 1;
                     end
                     `INST_R_FUNC7_BASE_TYPE1: begin
+                        reg_we = 1'b1;
+                        mem_we = 1'b0;
+                        csr_we = 1'b0;
+                        jump_en = 1'b0;
                         case(func3)
                             `INST_OPCODE_R_SUB: begin
                                 rd_data = rs1_data - rs2_data;
@@ -95,32 +114,20 @@ module alu(
                                 rd_data = $signed(rs1_data) >>> rs2_data[4:0];
                             end
                         endcase
-                        reg_we = 1;
-                    end
-                    `INST_R_FUNC7_MUL_TYPE: begin
-                        case(func3)
-                            `INST_OPCODE_R_MUL, `INST_OPCODE_R_MULU: begin
-                                mul_op0 = rs1_data;
-                                mul_op1 = rs2_data;
-                            end
-                            `INST_OPCODE_R_MULSU: begin
-                                mul_op0 = (rs1_data[`REG_WIDTH - 1] == 1'b1) ? ~rs1_data + 1 : rs1_data;
-                                mul_op1 = rs2_data;
-                            end
-                            `INST_OPCODE_R_MULH: begin
-                                mul_op0 = (rs1_data[`REG_WIDTH - 1] == 1'b1) ? ~rs1_data + 1 : rs1_data;
-                                mul_op1 = (rs2_data[`REG_WIDTH - 1] == 1'b1) ? ~rs2_data + 1 : rs2_data;
-                            end
-                        endcase
-                        rd_data = mul_op0 * mul_op1;
-                        reg_we = 1;
                     end
                 endcase
             end
+        endcase
+    end
+    // OP I
+    always @(*) begin
+        case (opcode)
             `INST_OPCODE_I_TYPE: begin
                 imm = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
-                rd_index = rd;
-                reg_we = 1;
+                reg_we = 1'b1;
+                mem_we = 1'b0;
+                csr_we = 1'b0;
+                jump_en = 1'b0;
                 case(func3)
                     `INST_OPCODE_I_ADDI: begin
                         rd_data = rs1_data + imm;
@@ -156,9 +163,16 @@ module alu(
                     end
                 endcase
             end
+        endcase
+    end
+    // OP IL
+    always @(*) begin
+        case (opcode)
             `INST_OPCODE_IL_TYPE: begin
-                rd_index = rd;
-                reg_we = 1;
+                reg_we = 1'b1;
+                mem_we = 1'b0;
+                csr_we = 1'b0;
+                jump_en = 1'b0;
                 mem_addr = rs1_data + imm;
                 imm = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
                 case(func3)
@@ -179,8 +193,16 @@ module alu(
                     end
                 endcase
             end
+        endcase
+    end
+    // OP S
+    always @(*) begin
+        case (opcode)
             `INST_OPCODE_S_TYPE: begin
+                reg_we = 1'b0;
                 mem_we = 1'b1;
+                csr_we = 1'b0;
+                jump_en = 1'b0;
                 imm = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RD_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rd};
                 mem_addr = rs1_data + imm;
                 case(func3)
@@ -195,7 +217,17 @@ module alu(
                     end
                 endcase
             end
+        endcase
+    end
+
+    // OP B
+    always @(*) begin
+        case (opcode)
             `INST_OPCODE_B_TYPE: begin
+                reg_we = 1'b0;
+                mem_we = 1'b0;
+                csr_we = 1'b0;
+                jump = `INST_JUMP_B;
                 imm = {{20{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0};
                 case(func3)
                     `INST_OPCODE_B_BEQ: begin
@@ -218,36 +250,82 @@ module alu(
                     end
                 endcase
             end
+        endcase
+    end
+    // JAL
+    always @(*) begin
+        case (opcode)
             `INST_OPCODE_JAL_TYPE: begin
-                reg_we = 1;
+                reg_we = 1'b1;
+                mem_we = 1'b0;
+                csr_we = 1'b0;
+                jump_en = 1'b1;
                 imm = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
                 jump = `INST_JUMP_JAL;
                 rd_data = instruction_addr + `REG_WIDTH'h4;
-                rd_index = rd;
             end
+        endcase
+    end
+    // JALR
+    always @(*) begin
+        case (opcode)
             `INST_OPCODE_JALR_TYPE: begin
-                reg_we = 1;
+                reg_we = 1'b1;
+                mem_we = 1'b0;
+                csr_we = 1'b0;
+                jump_en = 1'b1;
                 imm = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
                 jump = `INST_JUMP_JALR;
                 rd_data = instruction_addr + `REG_WIDTH'h4;
-                rd_index = rd;
             end
-            `INST_OPCODE_LUI_TYPE: begin
-                rd_data = {instruction[31:12], {12{1'b0}}};
-                rd_index = rd;
-                reg_we = 1;
-                
-            end
+        endcase
+    end
+
+    // AUIPC
+    always @(*) begin
+        case (opcode)
             `INST_OPCODE_AUIPC_TYPE: begin
                 rd_data = instruction_addr + {instruction[31:12], {12{1'b0}}};
-                rd_index = rd;
-                reg_we = 1;
+                reg_we = 1'b1;
+                mem_we = 1'b0;
+                jump_en = 1'b0;
+                csr_we = 1'b0;
             end
+        endcase
+    end
+    // LUI
+    always @(*) begin
+        case (opcode)
+            `INST_OPCODE_LUI_TYPE: begin
+                rd_data = {instruction[31:12], {12{1'b0}}};
+                reg_we = 1'b1;
+                mem_we = 1'b0;
+                jump_en = 1'b0;
+                csr_we = 1'b0;
+            end
+        endcase
+    end
+    // NOP
+    always @(*) begin
+        case (opcode)
+            `INST_OPCODE_NOP_TYPE: begin
+                reg_we = 1'b0;
+                csr_we = 1'b0;
+                mem_we = 1'b0;
+                jump_en = 1'b0;
+            end
+        endcase
+    end
+
+    // CSR
+    always @(*) begin
+        case (opcode)
             `INST_OPCODE_CSR_TYPE: begin
                 rd_data = csr_rd_data;
-                rd_index = rd;
                 reg_we = 1'b1;
                 csr_we = 1'b1;
+                mem_we = 1'b0;
+                jump_en = 1'b0;
                 imm = {27'h0, instruction[19:15]};
                 csr_wr_addr = csr;
                 case(func3)
@@ -271,19 +349,48 @@ module alu(
                     end
                 endcase
             end
-            `INST_NOP_OP: begin
-            end
-            `INST_ECALL, `INST_EBREAK, `INST_FENCE: begin
+        endcase
+    end
+    // MUL
+    wire [`REG_WIDTH-1: 0] mul_result;
+    always @(*) begin
+        case (opcode)
+            `INST_OPCODE_R_TYPE: begin
+                case (func7)
+                    `INST_R_FUNC7_MUL_TYPE: begin
+                        case (func3)
+                            `INST_OPCODE_R_MUL, `INST_OPCODE_R_MULH,
+                            `INST_OPCODE_R_MULSU, `INST_OPCODE_R_MULU: begin
+                                reg_we = 1'b1;
+                                csr_we = 1'b0;
+                                mem_we = 1'b0;
+                                jump_en = 1'b0;
+                                rd_data = mul_result;
+                            end
+                        endcase
+                    end
+                endcase
             end
         endcase
     end
 
+    mul_fast u_mul_fast(
+        // input
+        .rs1(rs1_data),
+        .rs2(rs2_data),
+        .func3(func3),
+        // output
+        .rd(mul_result)
+    );
+    // DIV
     wire                    div_ready;
     reg  [`REG_WIDTH-1:0]   div_dividend;
     reg  [`REG_WIDTH-1:0]   div_divisor;
     reg  [1:0]             div_op;
     wire [`REG_WIDTH-1:0]   div_result;
-    
+    wire div_busy;
+    reg pre_ready;
+
     always @(*) begin
         case (opcode)
             `INST_OPCODE_R_TYPE: begin
@@ -296,6 +403,10 @@ module alu(
                                 div_dividend = rs1_data;
                                 div_divisor  = rs2_data;
                                 div_op_start = `DIV_OP_START;
+                                hold_flag = 1'b1;
+                                csr_we = 1'b0;
+                                mem_we = 1'b0;
+                                jump_en = 1'b0;
                             end
                         endcase
                     end
@@ -304,26 +415,36 @@ module alu(
         endcase
     end
 
-    always @(*) begin
-        if (div_ready) begin
-            reg_we = 1;
-            rd_data = div_result;
+    always @(*) 
+        if (div_busy) begin
             div_op_start = 1'b0;
         end
-    end
+    
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) begin
+            pre_ready <= 0;
+        end else if ((pre_ready == 1'b0) && (div_ready == 1'b1)) begin
+            reg_we <= 1'b1;
+            rd_data <= div_result;
+            hold_flag <= 1'b0;
+        end else begin
+            pre_ready <= div_ready;
+        end
 
-    div_unit #(
+    div #(
         .DW (`REG_WIDTH)
     ) u_div (
+        // input
         .clk      (clk),
         .rst_n    (rst_n),
         .start    (div_op_start),
         .op       (div_op),
         .dividend (div_dividend),
         .divisor  (div_divisor),
+        // output
         .result   (div_result),
         .ready    (div_ready),
-        .busy     ()
+        .busy     (div_busy)
     );
 
 endmodule

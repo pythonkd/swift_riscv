@@ -2,8 +2,8 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-07-28 22:11:12
- * @FilePath: /SwiftRiscv/rtl/core/core_top.v
+ * @LastEditTime: 2026-07-31 23:16:25
+ * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
@@ -20,6 +20,7 @@ module core_top (
     wire csr_we;
     wire jump_en;
     wire div_op_start;
+    wire hold_flag;
     wire data_err;
     wire instruction_err;
     wire instruction_decode_err;
@@ -71,6 +72,7 @@ module core_top (
         .rs1_data(rs1_data),
         .jump(jump),
         .jump_en(jump_en),
+        .hold_flag(hold_flag),
         //output
         .nx_pc(nx_pc)
     );
@@ -131,6 +133,7 @@ module core_top (
         .csr_rd_data(csr_rd_data),
         .mem_rd_data(mem_rd_data),
         //output
+        .hold_flag(hold_flag),
         .reg_we(reg_we),
         .mem_we(mem_we),
         .csr_we(csr_we),
@@ -152,6 +155,7 @@ module core_top (
         .ex_we(csr_we),
         .csr_rd_addr(csr_rd_addr),
         .csr_wr_addr(csr_wr_addr),
+        .csr_wr_data(csr_wr_data),
         .clint_we(clint_we),
         .clint_rd_addr(clint_rd_addr),
         .clint_wr_addr(clint_wr_addr),

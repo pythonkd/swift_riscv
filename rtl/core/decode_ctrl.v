@@ -2,8 +2,8 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 22:00:12
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-07-28 22:49:15
- * @FilePath: /SwiftRiscv/rtl/core/decode_ctrl.v
+ * @LastEditTime: 2026-08-01 15:49:29
+ * @FilePath: /swift_riscv/rtl/core/decode_ctrl.v
  * @Description: 
  * 
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
@@ -53,7 +53,7 @@ module decode(
                 rd_index = rd;
                 rs1_index = rs1;
             end
-            `INST_ECALL, `INST_EBREAK, `INST_FENCE: begin
+            `INST_OPCODE_EI_TYPE, `INST_OPCODE_NOP_TYPE, `INST_OPCODE_FENCE_TYPE: begin
                 rd_index = `INST_RD_WIDTH'b0;
             end
             `INST_OPCODE_ATOMIC_TYPE: begin

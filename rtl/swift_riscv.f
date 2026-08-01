@@ -1,4 +1,4 @@
-$ROOT_PATH/rtl/kun_riscv_defines.v
+$ROOT_PATH/rtl/swift_riscv_defines.v
 $ROOT_PATH/rtl/core/core_top.v
 $ROOT_PATH/rtl/core/pc_reg.v
 $ROOT_PATH/rtl/core/pc_mux.v
@@ -7,5 +7,6 @@ $ROOT_PATH/rtl/core/csr_reg.v
 $ROOT_PATH/rtl/core/decode_ctrl.v
 $ROOT_PATH/rtl/core/alu.v
 $ROOT_PATH/rtl/core/div.v
+$ROOT_PATH/rtl/core/mul.v
 $ROOT_PATH/rtl/instruction_lm.v
 $ROOT_PATH/rtl/data_lm.v

@@ -21,7 +21,7 @@ run:
 	|tee vcs.log 
 #---------------------------------------------------------------
 sim:
-	./simv |tee sim.log
+	./simv +vcs+loopdetect+100000 |tee sim.log
 #---------------------------------------------------------------
 #dve:
 #	dve -vpd vcdplus.vpd -script dve.tcl 
