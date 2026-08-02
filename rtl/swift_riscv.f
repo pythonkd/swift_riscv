@@ -1,4 +1,5 @@
 $ROOT_PATH/rtl/swift_riscv_defines.v
+$ROOT_PATH/rtl/utils/dll.v
 $ROOT_PATH/rtl/soc_top.v
 $ROOT_PATH/rtl/clk_div.v
 $ROOT_PATH/rtl/crg.v
