@@ -41,3 +41,39 @@ module clk_div #(
         else
             cnt <= cnt + 1;
 endmodule
+
+module crg_clk_gate_div #(
+    parameter DW = 8,
+    parameter DEFAULT_VAL = 0) (
+        input clk,
+        input rst_n,
+        input [DW - 1: 0]div,
+        output o_clk
+);
+    wire is_zero = div ? 0: 1;
+    reg div_r1;
+    reg div_r2;
+    reg div_r3;
+    reg [DW-1: 0]cnt;
+    reg [DW-1: 0]cnt_nx;
+    wire [DW-1: 0]div_nx;
+    wire cnt_dec_done = ~(|cnt);
+    assign cnt_nx = cnt_dec_done ? div_latch : cnt - 1;
+    assign is_stable = div_r2 == div_r3;
+    assign div_nx = is_stable ? (is_zero ? 1 : div) : div_latch;
+
+
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n) begin
+            div_r1 <= DEFAULT_VAL;
+            div_r2 <= DEFAULT_VAL;
+            div_r3 <= DEFAULT_VAL;
+            cnt <= DEFAULT_VAL;
+        end else begin
+            div_r1 <= div;
+            div_r2 <= div_r1;
+            div_r3 <= div_r2;
+            cnt <= cnt_nx;
+            div_latch <= div_nx;
+        end
+endmodule
