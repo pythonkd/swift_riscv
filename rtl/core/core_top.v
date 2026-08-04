@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-07-31 23:16:25
+ * @LastEditTime: 2026-08-04 22:51:44
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -11,6 +11,7 @@
 
 module core_top (
     input clk,
+    input mtimer_clk,
     input rst_n,
     input uart_int
 );
@@ -25,6 +26,8 @@ module core_top (
     wire data_err;
     wire instruction_err;
     wire instruction_decode_err;
+    wire ecall_except;
+    wire ebreak_except;
     wire exception;
     wire [`REG_WIDTH - 1:0]mem_rd_data;
     wire [`REG_WIDTH - 1:0]mem_addr;
@@ -54,9 +57,17 @@ module core_top (
     wire [`INST_CSR_WIDTH - 1: 0]clint_wr_addr;
     wire [`REG_WIDTH - 1: 0]clint_wr_data;
     wire [`REG_WIDTH - 1: 0]clint_rd_data;
-    [`INTERRUPT_MAX_NUM-1: 0]int_src;
+    wire [`INTERRUPT_MAX_NUM-1: 0]ext_int_src;
+    wire mtimer_int;
+    wire ext_int;
+    wire sync_except;
+    wire async_except;
 
     assign cpu_err = {{(`CPU_ERR_WIDTH - 3){1'b0}}, instruction_decode_err, data_err, instruction_err};
+    assign ext_int = |ext_int_src;
+    assign sync_except = |cpu_err &  || ecall_except || ebreak_except;
+    assign async_except = ext_int || (mtimer_int & mtimer_int_en);
+    assign exception = sync_except || (async_except & global_int_en);
     pc_reg u_pc_reg(
         //input
         .clk(clk),
@@ -78,6 +89,7 @@ module core_top (
         .jump_en(jump_en),
         .hold_flag(hold_flag),
         .csr_mtvec(csr_mtvec),
+        .exception(exception),
         //output
         .nx_pc(nx_pc)
     );
@@ -165,6 +177,11 @@ module core_top (
         .clint_rd_addr(clint_rd_addr),
         .clint_wr_addr(clint_wr_addr),
         .clint_wr_data(clint_wr_data),
+        .cpu_err(cpu_err),
+        .ecall_except(ecall_except),
+        .ebreak_except(ebreak_except),
+        .mtimer_int(mtimer_int),
+        .ext_int(ext_int),
         //output
         .global_int_en(global_int_en),
         .mtimer_int_en(mtimer_int_en),
@@ -174,7 +191,17 @@ module core_top (
     );
 
     int_switch u_int_switch(
+        // input
         .uart_int(uart_int),
-        .int_src(int_src)
+        // output
+        .int_src(ext_int_src)
+    );
+
+    mtimer u_mtimer(
+        // input
+        .mtimer_clk(mtimer_clk),
+        .rst_n(rst_n),
+        // output
+        .mtimer_int(mtimer_int)
     );
 endmodule

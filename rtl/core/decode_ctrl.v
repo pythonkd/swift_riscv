@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 22:00:12
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-01 15:49:29
+ * @LastEditTime: 2026-08-04 21:42:41
  * @FilePath: /swift_riscv/rtl/core/decode_ctrl.v
  * @Description: 
  * 
@@ -83,7 +83,6 @@ module decode(
                 endcase
             default: begin
                 instruction_decode_err = 1;
-                csr_index = `CSR_MTVEC;
             end
         endcase
     end

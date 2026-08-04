@@ -2,8 +2,8 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-27 21:32:32
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-07-28 21:25:34
- * @FilePath: /SwiftRiscv/rtl/core/csr_reg.v
+ * @LastEditTime: 2026-08-04 22:49:58
+ * @FilePath: /swift_riscv/rtl/core/csr_reg.v
  * @Description: 
  * 
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
@@ -21,6 +21,11 @@ module csr_reg(
     input [`INST_CSR_WIDTH - 1: 0]clint_rd_addr,
     input [`INST_CSR_WIDTH - 1: 0]clint_wr_addr,
     input [`REG_WIDTH - 1: 0]clint_wr_data,
+    input [`CPU_ERR_WIDTH-1: 0]cpu_err,
+    input ecall_except,
+    input ebreak_except,
+    input ext_int,
+    input mtimer_int,
     // output
     output global_int_en,
     output mtimer_int_en,

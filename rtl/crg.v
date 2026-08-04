@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-02 14:19:05
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-02 22:23:28
+ * @LastEditTime: 2026-08-04 22:17:48
  * @FilePath: /swift_riscv/rtl/crg.v
  * @Description: 
  * 
@@ -13,6 +13,7 @@ module crg(
     input clk,
     input rst_n,
     output core_clk,
+    output mtimer_clk,
     output core_rst,
     output apb_clk,
     output uart_clk,
@@ -52,6 +53,16 @@ module crg(
         .rst_val(1'b0),
         // output
         .clk_out(uart_clk)
+    );
+
+    crg_clk_gate_div #(
+        .DW(6),
+        .DEFAULT_VAL(0)
+    ) u_mtimer_clk_div (
+        .clk(clk),
+        .rst_n(core_rst),
+        .div(6'h32),
+        .o_clk(mtimer_clk)
     );
 
     gen_zero_dff #(

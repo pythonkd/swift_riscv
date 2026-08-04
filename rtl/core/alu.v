@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-01 15:49:57
+ * @LastEditTime: 2026-08-04 22:06:11
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 
  * 
@@ -24,6 +24,8 @@ module alu(
     output reg jump_en,
     output reg div_op_start,
     output reg hold_flag,
+    output reg ecall_except,
+    output reg ebreak_except,
     output reg [`INST_JUMP_WIDTH - 1: 0]jump,
     output reg [`REG_WIDTH - 1: 0]imm,
     output reg [`REG_WIDTH - 1: 0]rd_data,
@@ -43,12 +45,24 @@ module alu(
 
     // EI, ECALL/EBREAK
     always @(*) begin
+        ecall_except = 0;
+        ebreak_except = 0;
         case (opcode)
             `INST_OPCODE_EI_TYPE: begin
                 reg_we = 1'b0;
                 mem_we = 1'b0;
-                csr_we = 1'b0;
+                csr_we = 1'b1;
                 jump_en = 1'b0;
+                csr_wr_data = instruction_addr;
+                csr_wr_addr = `CSR_MEPC;
+                case (func7)
+                    `INST_OPCODE_EI_ECALL: begin
+                        ecall_except = 1;
+                    end
+                    `INST_OPCODE_EI_EREAK: begin
+                        ebreak_except = 1;
+                    end
+                endcase
             end
         endcase
     end

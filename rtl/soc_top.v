@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-02 20:35:24
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-02 22:24:48
+ * @LastEditTime: 2026-08-04 22:12:10
  * @FilePath: /swift_riscv/rtl/soc_top.v
  * @Description: 
  * 
@@ -19,6 +19,7 @@ module soc_top (
     wire core_rst;
     wire uart_rst;
     wire uart_int;
+    wire mtimer_clk;
     
     crg u_crg(
         // input
@@ -26,6 +27,7 @@ module soc_top (
         .rst_n(rst_n),
         // output
         .core_clk(core_clk),
+        .mtimer_clk(mtimer_clk),
         .apb_clk(apb_clk),
         .uart_clk(uart_clk),
         .core_rst(core_rst),
@@ -36,7 +38,8 @@ module soc_top (
         //input
         .clk(core_clk),
         .rst_n(core_rst),
-        .uart_int(uart_int)
+        .mtimer_clk(mtimer_clk),
+        .uart_int(uart_int),
     );
 
 endmodule
