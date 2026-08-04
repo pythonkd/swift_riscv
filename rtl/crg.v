@@ -57,10 +57,21 @@ module crg(
     gen_zero_dff #(
         .DW(1),
         .STAGS(2)
-    ) u_gen_zero_dff_uart_deassert(
+    ) u_gen_zero_dff_core_deassert(
         .clk(apb_clk),
         .rst_n(rst_n),
         .din(rst_n),
         .dout(core_rst)
     );
+
+    gen_zero_dff #(
+        .DW(1),
+        .STAGS(2)
+    ) u_gen_zero_dff_uart_deassert(
+        .clk(apb_clk),
+        .rst_n(rst_n),
+        .din(rst_n),
+        .dout(uart_rst)
+    );
+
 endmodule

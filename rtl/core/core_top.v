@@ -11,7 +11,8 @@
 
 module core_top (
     input clk,
-    input rst_n
+    input rst_n,
+    input uart_int
 );
 
     wire stop;
@@ -24,6 +25,7 @@ module core_top (
     wire data_err;
     wire instruction_err;
     wire instruction_decode_err;
+    wire exception;
     wire [`REG_WIDTH - 1:0]mem_rd_data;
     wire [`REG_WIDTH - 1:0]mem_addr;
     wire [`REG_WIDTH - 1:0]mem_wr_data;
@@ -41,6 +43,7 @@ module core_top (
     wire [`INST_RS1_WIDTH  - 1: 0]rs2_index;
     wire [`REG_WIDTH - 1: 0]rs1_data;
     wire [`REG_WIDTH - 1: 0]rs2_data;
+    wire [`REG_WIDTH - 1: 0]csr_mtvec;
     wire [`INST_CSR_WIDTH - 1: 0]csr_rd_addr;
     wire [`INST_CSR_WIDTH - 1: 0]csr_wr_addr;
     wire global_int_en;
@@ -51,6 +54,7 @@ module core_top (
     wire [`INST_CSR_WIDTH - 1: 0]clint_wr_addr;
     wire [`REG_WIDTH - 1: 0]clint_wr_data;
     wire [`REG_WIDTH - 1: 0]clint_rd_data;
+    [`INTERRUPT_MAX_NUM-1: 0]int_src;
 
     assign cpu_err = {{(`CPU_ERR_WIDTH - 3){1'b0}}, instruction_decode_err, data_err, instruction_err};
     pc_reg u_pc_reg(
@@ -73,6 +77,7 @@ module core_top (
         .jump(jump),
         .jump_en(jump_en),
         .hold_flag(hold_flag),
+        .csr_mtvec(csr_mtvec),
         //output
         .nx_pc(nx_pc)
     );
@@ -168,4 +173,8 @@ module core_top (
         .clint_rd_data(clint_rd_data)
     );
 
+    int_switch u_int_switch(
+        .uart_int(uart_int),
+        .int_src(int_src)
+    );
 endmodule

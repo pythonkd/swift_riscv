@@ -81,7 +81,10 @@ module decode(
                         csr_index = csr;
                     end
                 endcase
-            default: instruction_decode_err = 1;
+            default: begin
+                instruction_decode_err = 1;
+                csr_index = `CSR_MTVEC;
+            end
         endcase
     end
 

@@ -163,3 +163,4 @@
 
 `define DIV_OP_STOP 1'b0
 `define DIV_OP_START 1'b1
+`define INTERRUPT_MAX_NUM 32

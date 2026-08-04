@@ -14,10 +14,13 @@ module pc_mux(
     input stop,
     input jump_en,
     input hold_flag,
+    input exception,
     input [`REG_WIDTH - 1: 0]pc,
     input [`INST_JUMP_WIDTH - 1: 0]jump,
     input [`REG_WIDTH - 1: 0]imm,
     input [`REG_WIDTH - 1: 0]rs1_data,
+    input [`REG_WIDTH - 1: 0]csr_mtvec,
+
     output reg [`REG_WIDTH - 1: 0]nx_pc
 );
     always @(*)
@@ -31,6 +34,8 @@ module pc_mux(
             nx_pc = imm + rs1_data;
         else if(jump_en && (jump == `INST_JUMP_B))
             nx_pc = pc + imm;
+        else if(exception)
+            nx_pc = csr_mtvec;
         else
             nx_pc = pc + `REG_WIDTH'h4;
 endmodule

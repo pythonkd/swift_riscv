@@ -26,7 +26,8 @@ module csr_reg(
     output mtimer_int_en,
     output ex_int_en,
     output reg [`REG_WIDTH - 1: 0]csr_rd_data,
-    output reg [`REG_WIDTH - 1: 0]clint_rd_data
+    output reg [`REG_WIDTH - 1: 0]clint_rd_data,
+    output reg [`REG_WIDTH - 1: 0]csr_mtvec_data
 );
     reg [`REG_WIDTH - 1: 0]mepc;
     reg [`REG_WIDTH - 1: 0]mcause;

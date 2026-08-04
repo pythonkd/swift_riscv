@@ -55,8 +55,8 @@ module crg_clk_gate_div #(
     reg div_r2;
     reg div_r3;
     reg [DW-1: 0]cnt;
-    reg [DW-1: 0]cnt_nx;
-    wire [DW-1: 0]div_nx;
+    wire [DW-1: 0]cnt_nx;
+    reg [DW-1: 0]div_latch;
     wire cnt_dec_done = ~(|cnt);
     assign cnt_nx = cnt_dec_done ? div_latch : cnt - 1;
     assign is_stable = div_r2 == div_r3;

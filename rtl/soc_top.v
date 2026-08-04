@@ -17,6 +17,8 @@ module soc_top (
     wire apb_clk;
     wire uart_clk;
     wire core_rst;
+    wire uart_rst;
+    wire uart_int;
     
     crg u_crg(
         // input
@@ -26,12 +28,15 @@ module soc_top (
         .core_clk(core_clk),
         .apb_clk(apb_clk),
         .uart_clk(uart_clk),
-        .core_rst(core_rst)
+        .core_rst(core_rst),
+        .uart_rst(uart_rst)
     );
 
     core_top u_core_top(
+        //input
         .clk(core_clk),
-        .rst_n(core_rst)
+        .rst_n(core_rst),
+        .uart_int(uart_int)
     );
 
 endmodule
