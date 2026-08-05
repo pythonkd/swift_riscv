@@ -20,7 +20,8 @@ module pc_mux(
     input [`REG_WIDTH - 1: 0]imm,
     input [`REG_WIDTH - 1: 0]rs1_data,
     input [`REG_WIDTH - 1: 0]csr_mtvec,
-
+    input [`REG_WIDTH - 1: 0]csr_mepc,
+    input mret_jump,
     output reg [`REG_WIDTH - 1: 0]nx_pc
 );
     always @(*)
@@ -36,6 +37,8 @@ module pc_mux(
             nx_pc = pc + imm;
         else if(exception)
             nx_pc = csr_mtvec;
+        else if (mret_jump)
+            nx_pc = csr_mepc;
         else
             nx_pc = pc + `REG_WIDTH'h4;
 endmodule

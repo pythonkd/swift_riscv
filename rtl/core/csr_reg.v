@@ -21,19 +21,27 @@ module csr_reg(
     input [`INST_CSR_WIDTH - 1: 0]clint_rd_addr,
     input [`INST_CSR_WIDTH - 1: 0]clint_wr_addr,
     input [`REG_WIDTH - 1: 0]clint_wr_data,
-    input [`CPU_ERR_WIDTH-1: 0]cpu_err,
     input ecall_except,
     input ebreak_except,
+    input instruction_decode_err,
+    input data_err,
     input ext_int,
     input mtimer_int,
+    input mret_occurred,
     // output
     output global_int_en,
     output mtimer_int_en,
     output ex_int_en,
     output reg [`REG_WIDTH - 1: 0]csr_rd_data,
     output reg [`REG_WIDTH - 1: 0]clint_rd_data,
-    output reg [`REG_WIDTH - 1: 0]csr_mtvec_data
+    output reg [`REG_WIDTH - 1: 0]csr_mtvec_data,
+    output reg [`REG_WIDTH - 1: 0]csr_mepc_data
 );
+    localparam MIE_BIT    = 3;
+    localparam MPIE_BIT   = 7;
+    localparam MPP_HI     = 12;
+    localparam MPP_LO     = 11;
+
     reg [`REG_WIDTH - 1: 0]mepc;
     reg [`REG_WIDTH - 1: 0]mcause;
     reg [`REG_WIDTH - 1: 0]mstatus;
@@ -42,10 +50,52 @@ module csr_reg(
     reg [`REG_WIDTH - 1: 0]mie;
     reg [`REG_WIDTH*2 - 1: 0]cycle;
     reg [`REG_WIDTH - 1: 0]mscratch;
+    wire       mstatus_mie;
 
+    assign mstatus_mie  = mstatus_r[MIE_BIT];
+    
     assign global_int_en = mstatus[3];
     assign mtimer_int_en = mie[7];
     assign ex_int_en = mstatus[7];
+    assign csr_mtvec_data = mtvec;
+    assign csr_mepc_data = mepc;
+
+    // exception start
+    always@(posedge clk or negedge rst_n) begin
+        if (ebreak_except) begin
+            mcause = {{1{1'b0}}, {20{1'b0}}, `EXCEPTION_CODE_BREAKPOINT};
+            mstatus[MPIE_BIT] = mstatus_mie;
+            mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
+            mstatus[MIE_BIT] = 1'b0;
+        end else if(ecall_except) begin
+            mcause = {{1{1'b0}}, {20{1'b0}}, `EXCEPTION_CODE_ECALL_M_MODE};
+            mstatus[MPIE_BIT] = mstatus_mie;
+            mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
+            mstatus[MIE_BIT] = 1'b0;
+        end else if(instruction_decode_err) begin
+            mcause = {{1{1'b0}}, {20{1'b0}}, `EXCEPTION_CODE_ILLEGAL_INSTRUCTION};
+            mstatus[MPIE_BIT] = mstatus_mie;
+            mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
+            mstatus[MIE_BIT] = 1'b0;
+        end else if(global_int_en && ext_int_en && ex_int) begin
+            mcause = {{1{1'b1}}, {20{1'b0}}, `EXCEPTION_CODE_EXTERNAL_INT};
+            mstatus[MPIE_BIT] = mstatus_mie;
+            mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
+            mstatus[MIE_BIT] = 1'b0;
+        end else if(global_int_en  && mtimer_int_en && mtimer_int) begin
+            mcause = {{1{1'b1}}, {20{1'b0}}, `EXCEPTION_CODE_MTIMER_INT};
+            mstatus[MPIE_BIT] = mstatus_mie;
+            mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
+            mstatus[MIE_BIT] = 1'b0;
+        end
+    end
+
+    // except end
+    always@(posedge clk or negedge rst_n)
+        if (mret_occurred) begin
+            mstatus[MIE_BIT] = mstatus[MPIE_BIT];
+        end
+
 
     always@(posedge clk or negedge rst_n) begin
         if (!rst_n)

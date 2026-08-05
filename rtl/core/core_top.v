@@ -29,6 +29,8 @@ module core_top (
     wire ecall_except;
     wire ebreak_except;
     wire exception;
+    wire mret_occurred;
+    wire mret_jump;
     wire [`REG_WIDTH - 1:0]mem_rd_data;
     wire [`REG_WIDTH - 1:0]mem_addr;
     wire [`REG_WIDTH - 1:0]mem_wr_data;
@@ -40,13 +42,13 @@ module core_top (
     wire [`REG_WIDTH - 1: 0]cur_pc;
     wire [`REG_WIDTH - 1: 0]nx_pc;
     wire [`INST_WIDTH-1: 0]instruction;
-    wire [`CPU_ERR_WIDTH-1: 0]cpu_err;
     wire [`REG_WIDTH - 1: 0]imm;
     wire [`INST_RS1_WIDTH  - 1: 0]rs1_index;
     wire [`INST_RS1_WIDTH  - 1: 0]rs2_index;
     wire [`REG_WIDTH - 1: 0]rs1_data;
     wire [`REG_WIDTH - 1: 0]rs2_data;
     wire [`REG_WIDTH - 1: 0]csr_mtvec;
+    wire [`REG_WIDTH - 1: 0]csr_mepc;
     wire [`INST_CSR_WIDTH - 1: 0]csr_rd_addr;
     wire [`INST_CSR_WIDTH - 1: 0]csr_wr_addr;
     wire global_int_en;
@@ -61,19 +63,17 @@ module core_top (
     wire mtimer_int;
     wire ext_int;
     wire sync_except;
-    wire async_except;
+    wire csr_mcause_int;
 
-    assign cpu_err = {{(`CPU_ERR_WIDTH - 3){1'b0}}, instruction_decode_err, data_err, instruction_err};
     assign ext_int = |ext_int_src;
-    assign sync_except = |cpu_err &  || ecall_except || ebreak_except;
-    assign async_except = ext_int || (mtimer_int & mtimer_int_en);
-    assign exception = sync_except || (async_except & global_int_en);
+    assign sync_except = instruction_err || instruction_decode_err || ebreak_except || ecall_except || data_err;
+    assign csr_mcause_int = ext_int || (mtimer_int & mtimer_int_en);
+    assign exception = sync_except || (csr_mcause_int & global_int_en);
     pc_reg u_pc_reg(
         //input
         .clk(clk),
         .rst_n(rst_n),
         .nx_pc(nx_pc),
-        .cpu_err(cpu_err),
         //output
         .pc(cur_pc),
         .stop(stop)
@@ -89,7 +89,9 @@ module core_top (
         .jump_en(jump_en),
         .hold_flag(hold_flag),
         .csr_mtvec(csr_mtvec),
+        .csr_mepc(csr_mepc),
         .exception(exception),
+        .mret_jump(mret_jump),
         //output
         .nx_pc(nx_pc)
     );
@@ -162,7 +164,8 @@ module core_top (
         .mem_wr_data(mem_wr_data),
         .mem_addr(mem_addr),
         .csr_wr_data(csr_wr_data),
-        .csr_wr_addr(csr_wr_addr)
+        .csr_wr_addr(csr_wr_addr),
+        .mret_occurred(mret_occurred)
     );
 
     csr_reg u_csr_reg(
@@ -177,17 +180,21 @@ module core_top (
         .clint_rd_addr(clint_rd_addr),
         .clint_wr_addr(clint_wr_addr),
         .clint_wr_data(clint_wr_data),
-        .cpu_err(cpu_err),
         .ecall_except(ecall_except),
-        .ebreak_except(ebreak_except),
+        .ebreak_except(ecall_except),
         .mtimer_int(mtimer_int),
         .ext_int(ext_int),
+        .instruction_decode_err(instruction_decode_err),
+        .data_err(data_err),
+        .mret_occurred(mret_occurred),
         //output
         .global_int_en(global_int_en),
         .mtimer_int_en(mtimer_int_en),
         .ex_int_en(ex_int_en),
         .csr_rd_data(csr_rd_data),
-        .clint_rd_data(clint_rd_data)
+        .clint_rd_data(clint_rd_data),
+        .csr_mtvec_data(csr_mtvec),
+        .mret_jump(mret_jump)
     );
 
     int_switch u_int_switch(

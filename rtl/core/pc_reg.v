@@ -13,16 +13,14 @@
 module pc_reg(
     input clk,
     input rst_n,
-    input [`CPU_ERR_WIDTH - 1: 0]cpu_err,
-    input [`REG_WIDTH - 1:0]nx_pc,
+    input [`REG_WIDTH - 1: 0]nx_pc,
     output reg [`REG_WIDTH - 1: 0]pc,
     output reg stop
 );
-    wire err_occur = |cpu_err;
 
     // assign stop = !rst_n;
     always @(posedge clk or negedge rst_n)
-        if (!rst_n | err_occur)
+        if (!rst_n)
             stop <= 1'b1;
         else
             stop <= 1'b0;

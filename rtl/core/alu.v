@@ -33,6 +33,7 @@ module alu(
     output reg [`REG_WIDTH - 1:0]mem_addr,
     output reg [`REG_WIDTH - 1:0]csr_wr_data,
     output reg [`INST_CSR_WIDTH - 1:0]csr_wr_addr
+    output reg mret_occurred;
 );
     wire [`INST_OPCODE_WIDTH - 1: 0]opcode = instruction[`INST_OPCODE_BASE + `INST_OPCODE_WIDTH - 1: `INST_OPCODE_BASE];
     wire [`INST_RD_WIDTH - 1:0] rd = instruction[`INST_RD_BASE+`INST_RD_WIDTH-1:`INST_RD_BASE];
@@ -47,20 +48,28 @@ module alu(
     always @(*) begin
         ecall_except = 0;
         ebreak_except = 0;
+        mret_occurred = 0;
         case (opcode)
             `INST_OPCODE_EI_TYPE: begin
                 reg_we = 1'b0;
                 mem_we = 1'b0;
-                csr_we = 1'b1;
                 jump_en = 1'b0;
-                csr_wr_data = instruction_addr;
-                csr_wr_addr = `CSR_MEPC;
                 case (func7)
                     `INST_OPCODE_EI_ECALL: begin
                         ecall_except = 1;
+                        csr_we = 1'b1;
+                        csr_wr_data = instruction_addr;
+                        csr_wr_addr = `CSR_MEPC;
                     end
                     `INST_OPCODE_EI_EREAK: begin
                         ebreak_except = 1;
+                        csr_we = 1'b1;
+                        csr_wr_data = instruction_addr;
+                        csr_wr_addr = `CSR_MEPC;
+                    end
+                    `INST_OPCODE_EI_MRET: begin
+                        mret_occurred = 1'b1;
+                        csr_we = 1'b0;
                     end
                 endcase
             end
