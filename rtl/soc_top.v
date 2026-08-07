@@ -20,6 +20,12 @@ module soc_top (
     wire uart_rst;
     wire uart_int;
     wire mtimer_clk;
+    wire mst0_penable;
+    wire slv_ready;
+    wire mst0_we;
+    wire [`REG_WIDTH - 1: 0]mst0_addr;
+    wire [`REG_WIDTH - 1: 0]mst0_wdata;
+    wire [`REG_WIDTH - 1: 0]slv_r_data;
     
     crg u_crg(
         // input
@@ -40,6 +46,12 @@ module soc_top (
         .rst_n(core_rst),
         .mtimer_clk(mtimer_clk),
         .uart_int(uart_int),
+        .slv_r_data(slv_r_data),
+        .slv_ready(slv_ready),
+        .p_enable(mst0_penable),
+        .mst_we(mst0_we),
+        .mst_addr(mst0_addr),
+        .mst_wdata(mst0_wdata)
     );
 
 endmodule

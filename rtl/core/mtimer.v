@@ -24,7 +24,15 @@ module mtimer(
     reg [MTIMER_WIDTH - 1: 0]mtimer_cmp;
     assign mtimer_int = mtimer_happend ? 1'b1: 1'b0;
 
-    always @(posedge mtimer or negedge rst_n) begin
+    always @(posedge mtimer_clk or negedge rst_n) begin
+        if(!rst_n)
+            mtimer <= 0;
+        else begin
+            mtimer <= mtimer + 1;
+        end
+    end
+
+    always @(posedge mtimer_clk or negedge rst_n) begin
         if(!rst_n)
             mtimer_happend <= 0;
         else if (mtimer >= mtimer_cmp) begin

@@ -11,18 +11,25 @@
 
 
  module i_lm(
-    input [`REG_WIDTH - 1: 0]pc,
-    output reg [`INST_WIDTH - 1: 0]instruction,
-    output instruction_err
+   input clk,
+   input [`REG_WIDTH - 1: 0]addr,
+   input [`REG_WIDTH - 1: 0]instruction_w_data,
+   input instruction_we,
+   output reg [`INST_WIDTH - 1: 0]instruction,
+   output instruction_err
  );
  
    reg [`INST_WIDTH-1: 0]local_mem[0:`INST_MEM_DEPTH-1];
 
-   assign instruction_err = pc[`INST_MEM_WIDTH+1: 2] > `INST_MEM_DEPTH-1 ? 1 : 0;
+   assign instruction_err = addr[`INST_MEM_WIDTH+1: 2] > `INST_MEM_DEPTH-1 ? 1 : 0;
    always @(*)
    if (instruction_err)
       instruction = `INST_WIDTH'b0;
    else
-      instruction = local_mem[pc[`INST_MEM_WIDTH+1: 2]];
+      instruction = local_mem[addr[`INST_MEM_WIDTH+1: 2]];
+   
+   always @(posedge clk)
+      if (!instruction_err & instruction_we)
+         local_mem[addr[`DATA_MEM_WIDTH+1:2]] <= instruction_w_data;
 
  endmodule

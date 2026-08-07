@@ -25,22 +25,28 @@ module csr_reg(
     input ebreak_except,
     input instruction_decode_err,
     input data_err,
-    input ext_int,
+    input ex_int,
     input mtimer_int,
     input mret_occurred,
     // output
     output global_int_en,
     output mtimer_int_en,
     output ex_int_en,
+    output reg mret_jump,
     output reg [`REG_WIDTH - 1: 0]csr_rd_data,
     output reg [`REG_WIDTH - 1: 0]clint_rd_data,
     output reg [`REG_WIDTH - 1: 0]csr_mtvec_data,
     output reg [`REG_WIDTH - 1: 0]csr_mepc_data
 );
+    // mstatus
     localparam MIE_BIT    = 3;
     localparam MPIE_BIT   = 7;
     localparam MPP_HI     = 12;
     localparam MPP_LO     = 11;
+    // mie
+    localparam MIE_MSIE_BIT = 3;
+    localparam MIE_MTIE_BIT = 7;
+    localparam MIE_MEIE_BIT = 11;
 
     reg [`REG_WIDTH - 1: 0]mepc;
     reg [`REG_WIDTH - 1: 0]mcause;
@@ -52,11 +58,10 @@ module csr_reg(
     reg [`REG_WIDTH - 1: 0]mscratch;
     wire       mstatus_mie;
 
-    assign mstatus_mie  = mstatus_r[MIE_BIT];
-    
-    assign global_int_en = mstatus[3];
-    assign mtimer_int_en = mie[7];
-    assign ex_int_en = mstatus[7];
+    assign mstatus_mie  = mstatus[MIE_BIT];
+    assign global_int_en = mstatus[MIE_BIT];
+    assign mtimer_int_en = mie[MIE_MTIE_BIT];
+    assign ex_int_en = mie[MIE_MEIE_BIT];
     assign csr_mtvec_data = mtvec;
     assign csr_mepc_data = mepc;
 
@@ -77,7 +82,7 @@ module csr_reg(
             mstatus[MPIE_BIT] = mstatus_mie;
             mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
             mstatus[MIE_BIT] = 1'b0;
-        end else if(global_int_en && ext_int_en && ex_int) begin
+        end else if(global_int_en && ex_int_en && ex_int) begin
             mcause = {{1{1'b1}}, {20{1'b0}}, `EXCEPTION_CODE_EXTERNAL_INT};
             mstatus[MPIE_BIT] = mstatus_mie;
             mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
@@ -94,8 +99,8 @@ module csr_reg(
     always@(posedge clk or negedge rst_n)
         if (mret_occurred) begin
             mstatus[MIE_BIT] = mstatus[MPIE_BIT];
+            mret_jump <= 1'b1;
         end
-
 
     always@(posedge clk or negedge rst_n) begin
         if (!rst_n)

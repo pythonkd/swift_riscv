@@ -23,7 +23,7 @@ module alu(
     output reg csr_we,
     output reg jump_en,
     output reg div_op_start,
-    output reg hold_flag,
+    output reg alu_hold_flag,
     output reg ecall_except,
     output reg ebreak_except,
     output reg [`INST_JUMP_WIDTH - 1: 0]jump,
@@ -32,8 +32,8 @@ module alu(
     output reg [`REG_WIDTH - 1:0]mem_wr_data,
     output reg [`REG_WIDTH - 1:0]mem_addr,
     output reg [`REG_WIDTH - 1:0]csr_wr_data,
-    output reg [`INST_CSR_WIDTH - 1:0]csr_wr_addr
-    output reg mret_occurred;
+    output reg [`INST_CSR_WIDTH - 1:0]csr_wr_addr,
+    output reg mret_occurred
 );
     wire [`INST_OPCODE_WIDTH - 1: 0]opcode = instruction[`INST_OPCODE_BASE + `INST_OPCODE_WIDTH - 1: `INST_OPCODE_BASE];
     wire [`INST_RD_WIDTH - 1:0] rd = instruction[`INST_RD_BASE+`INST_RD_WIDTH-1:`INST_RD_BASE];
@@ -426,7 +426,7 @@ module alu(
                                 div_dividend = rs1_data;
                                 div_divisor  = rs2_data;
                                 div_op_start = `DIV_OP_START;
-                                hold_flag = 1'b1;
+                                alu_hold_flag = 1'b1;
                                 csr_we = 1'b0;
                                 mem_we = 1'b0;
                                 jump_en = 1'b0;
@@ -449,7 +449,7 @@ module alu(
         end else if ((pre_ready == 1'b0) && (div_ready == 1'b1)) begin
             reg_we <= 1'b1;
             rd_data <= div_result;
-            hold_flag <= 1'b0;
+            alu_hold_flag <= 1'b0;
         end else begin
             pre_ready <= div_ready;
         end

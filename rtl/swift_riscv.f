@@ -1,8 +1,9 @@
 $ROOT_PATH/rtl/swift_riscv_defines.v
 $ROOT_PATH/rtl/utils/dll.v
 $ROOT_PATH/rtl/soc_top.v
-$ROOT_PATH/rtl/clk_div.v
-$ROOT_PATH/rtl/crg.v
+$ROOT_PATH/rtl/crg/clk_div.v
+$ROOT_PATH/rtl/crg/crg_clk_gate.v
+$ROOT_PATH/rtl/crg/crg.v
 $ROOT_PATH/rtl/core/core_top.v
 $ROOT_PATH/rtl/core/pc_reg.v
 $ROOT_PATH/rtl/core/pc_mux.v
@@ -15,4 +16,8 @@ $ROOT_PATH/rtl/core/mul.v
 $ROOT_PATH/rtl/core/clint.v
 $ROOT_PATH/rtl/core/instruction_lm.v
 $ROOT_PATH/rtl/core/data_lm.v
+$ROOT_PATH/rtl/core/int_switch.v
+$ROOT_PATH/rtl/core/cpu_to_bus.v
+$ROOT_PATH/rtl/core/addr_mux.v
+$ROOT_PATH/rtl/core/mtimer.v
 
