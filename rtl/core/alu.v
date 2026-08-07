@@ -417,6 +417,7 @@ module alu(
     always @(*) begin
         case (opcode)
             `INST_OPCODE_R_TYPE: begin
+                alu_hold_flag = 1'b0;
                 case (func7)
                     `INST_R_FUNC7_MUL_TYPE: begin
                         case (func3)

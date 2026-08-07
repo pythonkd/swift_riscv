@@ -250,6 +250,7 @@ module core_top (
         .dlm_to_cpu_data(dlm_to_cpu_data),
         .data_we(mem_we),
         // output
+        .instruction(instruction),
         .cpu_w_dlm_en(cpu_w_dlm_en),
         .cpu_w_ilm_en(cpu_w_ilm_en),
         .cpu_w_external_en(cpu_w_external_en),
