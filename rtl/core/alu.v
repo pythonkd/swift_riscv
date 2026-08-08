@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-04 22:06:11
+ * @LastEditTime: 2026-08-08 12:04:17
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 
  * 

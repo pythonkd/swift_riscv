@@ -2,8 +2,8 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-02 14:29:24
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-02 22:04:58
- * @FilePath: /swift_riscv/rtl/clk_div.v
+ * @LastEditTime: 2026-08-08 11:16:29
+ * @FilePath: /swift_riscv/rtl/crg/clk_div.v
  * @Description: 
  * 
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
@@ -56,11 +56,13 @@ module crg_clk_gate_div #(
     reg div_r3;
     reg [DW-1: 0]cnt;
     wire [DW-1: 0]cnt_nx;
+    wire [DW-1: 0]div_nx;
     reg [DW-1: 0]div_latch;
     wire cnt_dec_done = ~(|cnt);
     assign cnt_nx = cnt_dec_done ? div_latch : cnt - 1;
     assign is_stable = div_r2 == div_r3;
     assign div_nx = is_stable ? (is_zero ? 1 : div) : div_latch;
+    assign o_clk = cnt_dec_done ? clk : 0;
 
 
     always @(posedge clk or negedge rst_n)

@@ -1,3 +1,14 @@
+/*
+ * @Author: pythonkd 1181878670@qq.com
+ * @Date: 2026-08-08 10:59:04
+ * @LastEditors: pythonkd 1181878670@qq.com
+ * @LastEditTime: 2026-08-08 11:48:20
+ * @FilePath: /swift_riscv/rtl/core/cpu_to_bus.v
+ * @Description: 
+ * 
+ * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
+ */
+
 module cpu_to_bus(
     input clk,
     input rst_n,

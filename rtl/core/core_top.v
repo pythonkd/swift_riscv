@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-04 22:51:44
+ * @LastEditTime: 2026-08-08 12:05:00
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -75,7 +75,8 @@ module core_top (
     wire cpu_w_dlm_en;
     wire cpu_w_ilm_en;
     wire cpu_w_external_en;
-    wire [`REG_WIDTH - 1: 0]cpu_to_ilm_addr;
+    wire [`REG_WIDTH - 1: 0]cpu_to_ilm_r_addr;
+    wire [`REG_WIDTH - 1: 0]cpu_to_ilm_w_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_ilm_data;
     wire [`REG_WIDTH - 1: 0]cpu_to_dlm_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_dlm_data;
@@ -122,7 +123,8 @@ module core_top (
         .clk(clk),
         .instruction_w_data(cpu_to_ilm_data),
         .instruction_we(cpu_w_ilm_en),
-        .addr(cpu_to_ilm_addr),
+        .instruction_r_addr(cpu_to_ilm_r_addr),
+        .instruction_w_addr(cpu_to_ilm_w_addr),
         //output
         .instruction(ilm_to_cpu_data),
         .instruction_err(instruction_err)
@@ -255,7 +257,8 @@ module core_top (
         .cpu_w_ilm_en(cpu_w_ilm_en),
         .cpu_w_external_en(cpu_w_external_en),
         .mem_rd_data(mem_rd_data),
-        .cpu_to_ilm_addr(cpu_to_ilm_addr),
+        .cpu_to_ilm_r_addr(cpu_to_ilm_r_addr),
+        .cpu_to_ilm_w_addr(cpu_to_ilm_w_addr),
         .cpu_to_ilm_data(cpu_to_ilm_data),
         .cpu_to_dlm_addr(cpu_to_dlm_addr),
         .cpu_to_dlm_data(cpu_to_dlm_data),
