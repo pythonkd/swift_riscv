@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 17:45:31
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-08 12:05:58
+ * @LastEditTime: 2026-08-09 09:25:36
  * @FilePath: /swift_riscv/rtl/core/data_lm.v
  * @Description: 
  * 
@@ -35,7 +35,10 @@ module d_lm(
    always @(*)
       if (data_err)
          mem_rd_data = `REG_WIDTH'b0;
-      else
+      else if(mem_we) begin
+         mem_rd_data = mem_wr_data;
+      end else begin
          mem_rd_data = local_mem[mem_addr[`DATA_MEM_WIDTH+1:2]];
+      end
 
 endmodule

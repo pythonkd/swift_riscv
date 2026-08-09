@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-08 12:04:17
+ * @LastEditTime: 2026-08-09 20:34:33
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 
  * 
@@ -23,7 +23,7 @@ module alu(
     output reg csr_we,
     output reg jump_en,
     output reg div_op_start,
-    output reg alu_hold_flag,
+    output alu_hold_flag,
     output reg ecall_except,
     output reg ebreak_except,
     output reg [`INST_JUMP_WIDTH - 1: 0]jump,
@@ -43,8 +43,20 @@ module alu(
     wire [`INST_FUNC7_WIDTH - 1: 0]func7 = instruction[`INST_FUNC7_BASE + `INST_FUNC7_WIDTH - 1: `INST_FUNC7_BASE];
     wire [`INST_FUNC5_WIDTH - 1: 0]func5 = instruction[`INST_FUNC5_BASE + `INST_FUNC5_WIDTH - 1: `INST_FUNC5_BASE];
     wire [`INST_CSR_WIDTH - 1:0] csr = instruction[`INST_CSR_BASE+`INST_CSR_WIDTH-1:`INST_CSR_BASE];
+    reg jump_hold_flag;
+    reg div_hold_flag;
 
+    assign jump_hold_flag = ecall_except || ebreak_except || jump_en;
+    assign alu_hold_flag = jump_hold_flag || div_hold_flag;
     // EI, ECALL/EBREAK
+    always @(*) begin
+        case (opcode)
+            `INST_HOST_CPU_TYPE: begin
+                jump_en = 0;
+            end
+        endcase
+    end
+
     always @(*) begin
         ecall_except = 0;
         ebreak_except = 0;
@@ -417,7 +429,7 @@ module alu(
     always @(*) begin
         case (opcode)
             `INST_OPCODE_R_TYPE: begin
-                alu_hold_flag = 1'b0;
+                div_hold_flag = 1'b0;
                 case (func7)
                     `INST_R_FUNC7_MUL_TYPE: begin
                         case (func3)
@@ -427,7 +439,7 @@ module alu(
                                 div_dividend = rs1_data;
                                 div_divisor  = rs2_data;
                                 div_op_start = `DIV_OP_START;
-                                alu_hold_flag = 1'b1;
+                                div_hold_flag = 1'b1;
                                 csr_we = 1'b0;
                                 mem_we = 1'b0;
                                 jump_en = 1'b0;
@@ -450,7 +462,7 @@ module alu(
         end else if ((pre_ready == 1'b0) && (div_ready == 1'b1)) begin
             reg_we <= 1'b1;
             rd_data <= div_result;
-            alu_hold_flag <= 1'b0;
+            div_hold_flag <= 1'b0;
         end else begin
             pre_ready <= div_ready;
         end

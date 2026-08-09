@@ -20,4 +20,5 @@ $ROOT_PATH/rtl/core/int_switch.v
 $ROOT_PATH/rtl/core/cpu_to_bus.v
 $ROOT_PATH/rtl/core/addr_mux.v
 $ROOT_PATH/rtl/core/mtimer.v
-
+$ROOT_PATH/rtl/core/if_to_decode_dff.v
+$ROOT_PATH/rtl/core/decode_to_alu_dff.v

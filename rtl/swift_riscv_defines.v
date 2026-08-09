@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:47
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-04 23:25:12
+ * @LastEditTime: 2026-08-09 17:31:30
  * @FilePath: /swift_riscv/rtl/swift_riscv_defines.v
  * @Description: 
  * 
@@ -138,6 +138,7 @@
 
 `define INST_OPCODE_NOP_TYPE `INST_OPCODE_WIDTH'b0000001
 `define INST_OPCODE_FENCE_TYPE  `INST_OPCODE_WIDTH'b0001111
+`define INST_HOST_CPU_TYPE `INST_OPCODE_WIDTH'b0000000
 
 `define CSR_CYCLE 12'hc00
 `define CSR_CYCLEH 12'hc80

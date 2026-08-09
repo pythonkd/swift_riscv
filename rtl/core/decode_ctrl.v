@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 22:00:12
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-04 21:42:41
+ * @LastEditTime: 2026-08-09 17:31:57
  * @FilePath: /swift_riscv/rtl/core/decode_ctrl.v
  * @Description: 
  * 
@@ -28,6 +28,10 @@ module decode(
     wire [`INST_CSR_WIDTH - 1: 0]csr = instruction[`INST_CSR_BASE + `INST_CSR_WIDTH - 1: `INST_CSR_BASE];
     always @(*) begin
         instruction_decode_err = 0;
+        rs1_index = 0;
+        rs2_index = 0;
+        rd_index = 0;
+        csr_index = 0;
         case (opcode)
             `INST_OPCODE_R_TYPE: begin
                 rs1_index = rs1;
@@ -54,7 +58,6 @@ module decode(
                 rs1_index = rs1;
             end
             `INST_OPCODE_EI_TYPE, `INST_OPCODE_NOP_TYPE, `INST_OPCODE_FENCE_TYPE: begin
-                rd_index = `INST_RD_WIDTH'b0;
             end
             `INST_OPCODE_ATOMIC_TYPE: begin
                 case(func5)
@@ -81,6 +84,8 @@ module decode(
                         csr_index = csr;
                     end
                 endcase
+            `INST_HOST_CPU_TYPE: begin
+            end
             default: begin
                 instruction_decode_err = 1;
             end

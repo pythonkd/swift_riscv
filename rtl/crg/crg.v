@@ -65,7 +65,7 @@ module crg(
         .o_clk(mtimer_clk)
     );
 
-    gen_zero_dff #(
+    gen_zero_def_dff #(
         .DW(1),
         .STAGS(2)
     ) u_gen_zero_dff_core_deassert(
@@ -75,7 +75,7 @@ module crg(
         .dout(core_rst)
     );
 
-    gen_zero_dff #(
+    gen_zero_def_dff #(
         .DW(1),
         .STAGS(2)
     ) u_gen_zero_dff_uart_deassert(
