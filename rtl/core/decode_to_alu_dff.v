@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-08 17:53:32
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 20:19:44
+ * @LastEditTime: 2026-08-09 22:20:18
  * @FilePath: /swift_riscv/rtl/core/decode_to_alu_dff.v
  * @Description: 
  * 
@@ -19,13 +19,15 @@
     input [`REG_WIDTH - 1: 0]instruction_pipe1,
     input [`REG_WIDTH - 1: 0]cur_pc_pipe1,
     input [`REG_WIDTH - 1: 0]csr_rd_data_pipe1,
+    input [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe1,
 
     output [`REG_WIDTH - 1: 0]rs1_data_pipe2,
     output [`REG_WIDTH - 1: 0]rs2_data_pipe2,
     output [`INST_RD_WIDTH - 1: 0]rd_index_pipe2,
     output [`REG_WIDTH - 1: 0]instruction_pipe2,
     output [`REG_WIDTH - 1: 0]cur_pc_pipe2,
-    output [`REG_WIDTH - 1: 0]csr_rd_data_pipe2
+    output [`REG_WIDTH - 1: 0]csr_rd_data_pipe2,
+    input [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe2
  );
 
     gen_hold_default_dff #(
@@ -89,5 +91,16 @@
         .hold_en(hold_cpu),
         .din(csr_rd_data_pipe1),
         .dout(csr_rd_data_pipe2)
+    );
+
+    gen_hold_default_dff #(
+        .DW(`INTERRUPT_MAX_NUM),
+        .STAGS(1)
+    ) u_pc_to_decode_int_src(
+        .clk(clk),
+        .rst_n(rst_n),
+        .hold_en(hold_cpu),
+        .din(ex_int_src_pipe1),
+        .dout(ex_int_src_pipe2)
     );
  endmodule

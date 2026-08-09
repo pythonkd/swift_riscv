@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:47
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 17:31:30
+ * @LastEditTime: 2026-08-09 22:30:14
  * @FilePath: /swift_riscv/rtl/swift_riscv_defines.v
  * @Description: 
  * 
@@ -213,3 +213,7 @@
 `define DLM_END_ADDR_BASE `REG_WIDTH'h10010000
 `define MTIMER_ADDR_BASE `REG_WIDTH'h80000000
 `define UART_ADDR_BASE `REG_WIDTH'hF0000000
+
+`define INT_PROCESS_STATE_WIDTH 2
+`define INT_PROCESS_STATE_START `INT_PROCESS_STATE_WIDTH'b01
+`define INT_PROCESS_STATE_END `INT_PROCESS_STATE_WIDTH'b10

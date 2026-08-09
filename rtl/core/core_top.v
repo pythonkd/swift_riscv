@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 20:19:21
+ * @LastEditTime: 2026-08-09 22:42:53
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -75,10 +75,11 @@ module core_top (
     wire [`REG_WIDTH - 1: 0]clint_rd_data;
     wire [`INTERRUPT_MAX_NUM-1: 0]ex_int_src_pipe0;
     wire [`INTERRUPT_MAX_NUM-1: 0]ex_int_src_pipe1;
+    wire [`INTERRUPT_MAX_NUM-1: 0]ex_int_src_pipe2;
     wire mtimer_int;
-    wire ex_int;
+    wire ex_int_process;
     wire sync_except;
-    wire csr_mcause_int;
+    wire async_except;
     wire [`REG_WIDTH - 1: 0]ilm_to_cpu_data_pipe0;
     wire [`REG_WIDTH - 1: 0]dlm_to_cpu_data;
     wire cpu_w_dlm_en_pipe2;
@@ -94,12 +95,12 @@ module core_top (
     wire [`REG_DATA_DEPTH - 1: 0]external_to_cpu_rd_data;
     wire bus_hold_cpu;
     wire hold_cpu;
+    wire clint_hold_flag;
 
-    assign ex_int = |ex_int_src_pipe0;
     assign sync_except = instruction_err || instruction_decode_err || ebreak_except_pipe2 || ecall_except_pipe2 || data_err;
-    assign csr_mcause_int = ex_int || (mtimer_int & mtimer_int_en);
-    assign exception = sync_except || (csr_mcause_int & global_int_en);
-    assign hold_cpu = bus_hold_cpu | alu_hold_flag_pipe2;
+    assign async_except = ex_int_process || (mtimer_int & mtimer_int_en);
+    assign exception = sync_except || (async_except & global_int_en);
+    assign hold_cpu = bus_hold_cpu || alu_hold_flag_pipe2 || clint_hold_flag;
     pc_reg u_pc_reg(
         //input
         .clk(clk),
@@ -201,12 +202,14 @@ module core_top (
         .instruction_pipe1(instruction_pipe1),
         .cur_pc_pipe1(cur_pc_pipe1),
         .csr_rd_data_pipe1(csr_rd_data_pipe1),
+        .ex_int_src_pipe1(ex_int_src_pipe1),
         .rs1_data_pipe2(rs1_data_pipe2),
         .rs2_data_pipe2(rs2_data_pipe2),
         .rd_index_pipe2(rd_index_pipe2),
         .instruction_pipe2(instruction_pipe2),
         .cur_pc_pipe2(cur_pc_pipe2),
-        .csr_rd_data_pipe2(csr_rd_data_pipe2)
+        .csr_rd_data_pipe2(csr_rd_data_pipe2),
+        .ex_int_src_pipe2(ex_int_src_pipe2)
     );
 
     alu u_alu(
@@ -254,7 +257,7 @@ module core_top (
         .ebreak_except(ebreak_except_pipe2),
         .instruction_decode_err(instruction_decode_err),
         .data_err(data_err),
-        .ex_int(ex_int),
+        .ex_int(ex_int_process),
         .mtimer_int(mtimer_int),
         .mret_occurred(mret_occurred_pipe2),
         //output
@@ -327,7 +330,18 @@ module core_top (
     );
 
     clint u_clint(
-        .interrupts(ex_int_src_pipe1)
-        
+        .clk(clk),
+        .rst_n(rst_n),
+        .instruction_addr(cur_pc_pipe2),
+        .mret_occurred(mret_occurred),
+        .global_int_en(global_int_en),
+        .ex_int_en(ex_int_en),
+        .hold_flag(alu_hold_flag_pipe2),
+        .interrupts(ex_int_src_pipe2),
+        .clint_csr_we(clint_csr_we),
+        .clint_wr_addr(clint_wr_addr),
+        .clint_wr_data(clint_wr_data),
+        .clint_hold_flag(clint_hold_flag),
+        .ex_int_process(ex_int_process)
     );
 endmodule

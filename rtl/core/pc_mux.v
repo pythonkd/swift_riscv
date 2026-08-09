@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 18:02:19
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 20:50:04
+ * @LastEditTime: 2026-08-09 21:34:50
  * @FilePath: /swift_riscv/rtl/core/pc_mux.v
  * @Description: 
  * 
@@ -34,12 +34,12 @@ module pc_mux(
             nx_pc = imm + rs1_data;
         else if(jump_en && (jump == `INST_JUMP_B))
             nx_pc = cur_pc2 + imm;
+        else if(hold_flag)
+            nx_pc = cur_pc0;
         else if(exception)
             nx_pc = csr_mtvec;
         else if (mret_jump)
             nx_pc = csr_mepc;
-        else if(hold_flag)
-            nx_pc = cur_pc0;
         else
             nx_pc = cur_pc0 + `REG_WIDTH'h4;
 endmodule

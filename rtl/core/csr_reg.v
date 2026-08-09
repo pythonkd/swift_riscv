@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-27 21:32:32
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-04 22:49:58
+ * @LastEditTime: 2026-08-09 22:42:04
  * @FilePath: /swift_riscv/rtl/core/csr_reg.v
  * @Description: 
  * 
