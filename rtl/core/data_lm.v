@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 17:45:31
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 09:25:36
+ * @LastEditTime: 2026-08-11 20:24:40
  * @FilePath: /swift_riscv/rtl/core/data_lm.v
  * @Description: 
  * 
@@ -27,6 +27,8 @@ module d_lm(
          data_err <= 0;
       else if(mem_addr[`DATA_MEM_WIDTH+1:2] > (`DATA_MEM_DEPTH - 1))
          data_err <= 1;
+      else
+         data_err <= 0;
 
    always @(posedge clk)
       if (!data_err & mem_we)
@@ -35,9 +37,7 @@ module d_lm(
    always @(*)
       if (data_err)
          mem_rd_data = `REG_WIDTH'b0;
-      else if(mem_we) begin
-         mem_rd_data = mem_wr_data;
-      end else begin
+      else begin
          mem_rd_data = local_mem[mem_addr[`DATA_MEM_WIDTH+1:2]];
       end
 

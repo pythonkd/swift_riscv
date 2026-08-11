@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 22:42:53
+ * @LastEditTime: 2026-08-11 21:31:14
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -70,8 +70,8 @@ module core_top (
     wire ex_int_en;
     wire clint_we;
     wire [`INST_CSR_WIDTH - 1: 0]clint_rd_addr;
-    wire [`INST_CSR_WIDTH - 1: 0]clint_wr_addr;
-    wire [`REG_WIDTH - 1: 0]clint_wr_data;
+    wire [`INST_CSR_WIDTH - 1: 0]clint_csr_wr_addr;
+    wire [`REG_WIDTH - 1: 0]clint_csr_wr_data;
     wire [`REG_WIDTH - 1: 0]clint_rd_data;
     wire [`INTERRUPT_MAX_NUM-1: 0]ex_int_src_pipe0;
     wire [`INTERRUPT_MAX_NUM-1: 0]ex_int_src_pipe1;
@@ -93,6 +93,14 @@ module core_top (
     wire [`REG_WIDTH - 1: 0]cpu_to_external_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_external_data;
     wire [`REG_DATA_DEPTH - 1: 0]external_to_cpu_rd_data;
+    wire cpu_w_mtimer_en;
+    wire [`REG_WIDTH - 1: 0]mtimer_to_cpu_data;
+    wire [`REG_WIDTH - 1: 0]cpu_to_mtimer_addr;
+    wire [`REG_WIDTH - 1: 0]cpu_to_mtimer_data;
+    wire cpu_w_clint_en;
+    wire [`REG_WIDTH - 1: 0]clint_to_cpu_data;
+    wire [`REG_WIDTH - 1: 0]cpu_to_clint_addr;
+    wire [`REG_WIDTH - 1: 0]cpu_to_clint_data;
     wire bus_hold_cpu;
     wire hold_cpu;
     wire clint_hold_flag;
@@ -251,8 +259,8 @@ module core_top (
         .csr_wr_data(csr_wr_data_pipe2),
         .clint_we(clint_we),
         .clint_rd_addr(clint_rd_addr),
-        .clint_wr_addr(clint_wr_addr),
-        .clint_wr_data(clint_wr_data),
+        .clint_wr_addr(clint_csr_wr_addr),
+        .clint_wr_data(clint_csr_wr_data),
         .ecall_except(ecall_except_pipe2),
         .ebreak_except(ebreak_except_pipe2),
         .instruction_decode_err(instruction_decode_err),
@@ -283,7 +291,11 @@ module core_top (
         // input
         .mtimer_clk(mtimer_clk),
         .rst_n(rst_n),
+        .mtimer_addr(cpu_to_mtimer_addr),
+        .mtimer_wr_data(cpu_to_mtimer_data),
+        .mtimer_we(cpu_w_mtimer_en),        
         // output
+        .mtimer_rd_data(mtimer_to_cpu_data),
         .mtimer_int(mtimer_int)
     );
 
@@ -295,12 +307,16 @@ module core_top (
         .external_to_cpu_rd_data(external_to_cpu_rd_data),
         .ilm_to_cpu_data(ilm_to_cpu_data_pipe0),
         .dlm_to_cpu_data(dlm_to_cpu_data),
+        .mtimer_to_cpu_data(mtimer_to_cpu_data),
+        .clint_to_cpu_data(clint_to_cpu_data),
         .data_we(mem_we_pipe2),
         // output
-        .instruction(instruction_pipe0),
         .cpu_w_dlm_en(cpu_w_dlm_en_pipe2),
         .cpu_w_ilm_en(cpu_w_ilm_en_pipe2),
         .cpu_w_external_en(cpu_w_external_en),
+        .cpu_w_mtimer_en(cpu_w_mtimer_en),
+        .cpu_w_clint_en(cpu_w_clint_en),
+        .instruction(instruction_pipe0),
         .mem_rd_data(mem_rd_data_pipe2),
         .cpu_to_ilm_r_addr(cpu_to_ilm_r_addr_pipe0),
         .cpu_to_ilm_w_addr(cpu_to_ilm_w_addr_pipe2),
@@ -308,7 +324,12 @@ module core_top (
         .cpu_to_dlm_addr(cpu_to_dlm_addr_pipe2),
         .cpu_to_dlm_data(cpu_to_dlm_data_pipep2),
         .cpu_to_external_addr(cpu_to_external_addr),
-        .cpu_to_external_data(cpu_to_external_data)
+        .cpu_to_external_data(cpu_to_external_data),
+        .cpu_to_mtimer_addr(cpu_to_mtimer_addr),
+        .cpu_to_mtimer_data(cpu_to_mtimer_data),
+        .cpu_to_clint_addr(cpu_to_clint_addr),
+        .cpu_to_clint_data(cpu_to_clint_data)
+        
     );
 
     cpu_to_bus u_cpu_to_bus(
@@ -330,17 +351,23 @@ module core_top (
     );
 
     clint u_clint(
+        // input
         .clk(clk),
         .rst_n(rst_n),
         .instruction_addr(cur_pc_pipe2),
-        .mret_occurred(mret_occurred),
+        .mret_occurred(mret_occurred_pipe2),
         .global_int_en(global_int_en),
         .ex_int_en(ex_int_en),
         .hold_flag(alu_hold_flag_pipe2),
+        .clint_wr_addr(cpu_to_clint_addr),
+        .clint_wr_data(cpu_to_clint_data),
+        .clint_we(cpu_w_clint_en),
         .interrupts(ex_int_src_pipe2),
+        // output
+        .clint_rd_data(clint_to_cpu_data),
         .clint_csr_we(clint_csr_we),
-        .clint_wr_addr(clint_wr_addr),
-        .clint_wr_data(clint_wr_data),
+        .clint_csr_wr_addr(clint_csr_wr_addr),
+        .clint_csr_wr_data(clint_csr_wr_data),
         .clint_hold_flag(clint_hold_flag),
         .ex_int_process(ex_int_process)
     );
