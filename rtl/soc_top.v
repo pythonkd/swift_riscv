@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-02 20:35:24
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-04 22:12:10
+ * @LastEditTime: 2026-08-12 23:04:34
  * @FilePath: /swift_riscv/rtl/soc_top.v
  * @Description: 
  * 
@@ -23,9 +23,24 @@ module soc_top (
     wire mst0_penable;
     wire slv_ready;
     wire mst0_we;
+    wire [`REG_WIDTH - 1: 0]mst0_rdata
     wire [`REG_WIDTH - 1: 0]mst0_addr;
     wire [`REG_WIDTH - 1: 0]mst0_wdata;
     wire [`REG_WIDTH - 1: 0]slv_rd_data;
+    wire slv0_we;
+    wire slv0_sel;
+    wire slv0_ready;
+    wire slv0_penable;
+    wire [`REG_WIDTH - 1: 0]slv0_addr;
+    wire [`REG_WIDTH - 1: 0]slv0_wdata;
+    wire [`REG_WIDTH - 1: 0]slv0_rd_data;
+    wire slv1_we;
+    wire slv1_sel;
+    wire slv1_ready;
+    wire slv1_penable;
+    wire [`REG_WIDTH - 1: 0]slv1_addr;
+    wire [`REG_WIDTH - 1: 0]slv1_wdata;
+    wire [`REG_WIDTH - 1: 0]slv1_rd_data;
     
     crg u_crg(
         // input
@@ -52,6 +67,31 @@ module soc_top (
         .mst_we(mst0_we),
         .mst_addr(mst0_addr),
         .mst_wdata(mst0_wdata)
+    );
+
+    simple_bus u_simple_bus (
+        // input
+        .mst0_we(mst0_we),
+        .mst0_penable(mst0_penable),
+        .mst0_addr(mst0_addr),
+        .mst0_wdata(mst0_wdata),
+        .slv0_ready(slv0_ready),
+        .slv0_rd_data(slv0_rd_data),
+        .slv1_ready(slv1_ready),
+        .slv1_rd_data(slv1_rd_data),
+        // output
+        .slv0_we(slv0_we),
+        .slv0_sel(slv0_sel),
+        .slv0_penable(slv0_penable),
+        .slv0_addr(slv0_addr),
+        .slv0_wdata(slv0_wdata),
+        .slv1_we(slv1_we),
+        .slv1_sel(slv1_sel),
+        .slv1_penable(slv1_penable),
+        .slv1_addr(slv1_addr),
+        .slv1_wdata(slv1_wdata),
+        .slv_ready(slv_ready),
+        .mst0_rdata(mst0_rdata)
     );
 
 endmodule
