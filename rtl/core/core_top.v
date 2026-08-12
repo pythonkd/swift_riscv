@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-11 21:31:14
+ * @LastEditTime: 2026-08-12 22:25:19
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -14,7 +14,7 @@ module core_top (
     input mtimer_clk,
     input rst_n,
     input uart_int,
-    input [`REG_WIDTH - 1: 0]slv_r_data,
+    input [`REG_WIDTH - 1: 0]slv_rd_data,
     input slv_ready,
     output p_enable,
     output mst_we,
@@ -82,22 +82,22 @@ module core_top (
     wire async_except;
     wire [`REG_WIDTH - 1: 0]ilm_to_cpu_data_pipe0;
     wire [`REG_WIDTH - 1: 0]dlm_to_cpu_data;
-    wire cpu_w_dlm_en_pipe2;
-    wire cpu_w_ilm_en_pipe2;
-    wire cpu_w_external_en;
-    wire [`REG_WIDTH - 1: 0]cpu_to_ilm_r_addr_pipe0;
-    wire [`REG_WIDTH - 1: 0]cpu_to_ilm_w_addr_pipe2;
+    wire cpu_wr_dlm_en_pipe2;
+    wire cpu_wr_ilm_en_pipe2;
+    wire cpu_wr_external_en;
+    wire [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_addr_pipe0;
+    wire [`REG_WIDTH - 1: 0]cpu_to_ilm_wr_addr_pipe2;
     wire [`REG_WIDTH - 1: 0]cpu_to_ilm_data_pipe2;
     wire [`REG_WIDTH - 1: 0]cpu_to_dlm_addr_pipe2;
     wire [`REG_WIDTH - 1: 0]cpu_to_dlm_data_pipep2;
     wire [`REG_WIDTH - 1: 0]cpu_to_external_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_external_data;
     wire [`REG_DATA_DEPTH - 1: 0]external_to_cpu_rd_data;
-    wire cpu_w_mtimer_en;
+    wire cpu_wr_mtimer_en;
     wire [`REG_WIDTH - 1: 0]mtimer_to_cpu_data;
     wire [`REG_WIDTH - 1: 0]cpu_to_mtimer_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_mtimer_data;
-    wire cpu_w_clint_en;
+    wire cpu_wr_clint_en;
     wire [`REG_WIDTH - 1: 0]clint_to_cpu_data;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_data;
@@ -140,10 +140,10 @@ module core_top (
     i_lm u_ilm(
         //input
         .clk(clk),
-        .instruction_w_data(cpu_to_ilm_data_pipe2),
-        .instruction_we(cpu_w_ilm_en_pipe2),
-        .instruction_r_addr(cpu_to_ilm_r_addr_pipe0),
-        .instruction_w_addr(cpu_to_ilm_w_addr_pipe2),
+        .instruction_wr_data(cpu_to_ilm_data_pipe2),
+        .instruction_we(cpu_wr_ilm_en_pipe2),
+        .instruction_rd_addr(cpu_to_ilm_rd_addr_pipe0),
+        .instruction_wr_addr(cpu_to_ilm_wr_addr_pipe2),
         //output
         .instruction(ilm_to_cpu_data_pipe0),
         .instruction_err(instruction_err)
@@ -155,7 +155,7 @@ module core_top (
         .rst_n(rst_n),
         .mem_addr(cpu_to_dlm_addr_pipe2),
         .mem_wr_data(cpu_to_dlm_data_pipep2),
-        .mem_we(cpu_w_dlm_en_pipe2),
+        .mem_we(cpu_wr_dlm_en_pipe2),
         //output
         .mem_rd_data(mem_rd_data_pipe2),
         .data_err(data_err)
@@ -293,7 +293,7 @@ module core_top (
         .rst_n(rst_n),
         .mtimer_addr(cpu_to_mtimer_addr),
         .mtimer_wr_data(cpu_to_mtimer_data),
-        .mtimer_we(cpu_w_mtimer_en),        
+        .mtimer_we(cpu_wr_mtimer_en),        
         // output
         .mtimer_rd_data(mtimer_to_cpu_data),
         .mtimer_int(mtimer_int)
@@ -311,15 +311,15 @@ module core_top (
         .clint_to_cpu_data(clint_to_cpu_data),
         .data_we(mem_we_pipe2),
         // output
-        .cpu_w_dlm_en(cpu_w_dlm_en_pipe2),
-        .cpu_w_ilm_en(cpu_w_ilm_en_pipe2),
-        .cpu_w_external_en(cpu_w_external_en),
-        .cpu_w_mtimer_en(cpu_w_mtimer_en),
-        .cpu_w_clint_en(cpu_w_clint_en),
+        .cpu_wr_dlm_en(cpu_wr_dlm_en_pipe2),
+        .cpu_wr_ilm_en(cpu_wr_ilm_en_pipe2),
+        .cpu_wr_external_en(cpu_wr_external_en),
+        .cpu_wr_mtimer_en(cpu_wr_mtimer_en),
+        .cpu_wr_clint_en(cpu_wr_clint_en),
         .instruction(instruction_pipe0),
         .mem_rd_data(mem_rd_data_pipe2),
-        .cpu_to_ilm_r_addr(cpu_to_ilm_r_addr_pipe0),
-        .cpu_to_ilm_w_addr(cpu_to_ilm_w_addr_pipe2),
+        .cpu_to_ilm_rd_addr(cpu_to_ilm_rd_addr_pipe0),
+        .cpu_to_ilm_wr_addr(cpu_to_ilm_wr_addr_pipe2),
         .cpu_to_ilm_data(cpu_to_ilm_data_pipe2),
         .cpu_to_dlm_addr(cpu_to_dlm_addr_pipe2),
         .cpu_to_dlm_data(cpu_to_dlm_data_pipep2),
@@ -338,15 +338,15 @@ module core_top (
         .rst_n(rst_n),
         .cpu_addr(cpu_to_external_addr),
         .cpu_wdata(cpu_to_external_data),
-        .cpu_we(cpu_w_external_en),
-        .slv_r_data(slv_r_data),
+        .cpu_we(cpu_wr_external_en),
+        .slv_rd_data(slv_rd_data),
         .slv_ready(slv_ready),
         // output
         .p_enable(p_enable),
         .mst_we(mst_we),
         .mst_addr(mst_addr),
         .mst_wdata(mst_wdata),
-        .cpu_r_data(external_to_cpu_rd_data),
+        .cpu_rd_data(external_to_cpu_rd_data),
         .bus_hold_cpu(bus_hold_cpu)
     );
 
@@ -361,7 +361,7 @@ module core_top (
         .hold_flag(alu_hold_flag_pipe2),
         .clint_wr_addr(cpu_to_clint_addr),
         .clint_wr_data(cpu_to_clint_data),
-        .clint_we(cpu_w_clint_en),
+        .clint_we(cpu_wr_clint_en),
         .interrupts(ex_int_src_pipe2),
         // output
         .clint_rd_data(clint_to_cpu_data),

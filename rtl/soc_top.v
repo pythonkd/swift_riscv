@@ -25,7 +25,7 @@ module soc_top (
     wire mst0_we;
     wire [`REG_WIDTH - 1: 0]mst0_addr;
     wire [`REG_WIDTH - 1: 0]mst0_wdata;
-    wire [`REG_WIDTH - 1: 0]slv_r_data;
+    wire [`REG_WIDTH - 1: 0]slv_rd_data;
     
     crg u_crg(
         // input
@@ -46,7 +46,7 @@ module soc_top (
         .rst_n(core_rst),
         .mtimer_clk(mtimer_clk),
         .uart_int(uart_int),
-        .slv_r_data(slv_r_data),
+        .slv_rd_data(slv_rd_data),
         .slv_ready(slv_ready),
         .p_enable(mst0_penable),
         .mst_we(mst0_we),
