@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:47
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-11 22:40:56
+ * @LastEditTime: 2026-08-12 21:44:34
  * @FilePath: /swift_riscv/rtl/swift_riscv_defines.v
  * @Description: 
  * 
@@ -218,6 +218,9 @@
 
 `define CLINT_ADDR_BASE `REG_WIDTH'h30000000
 `define CLINT_END_ADDR `REG_WIDTH'h30001000
+// flash 128k
+`define FLASH_ADDR_BASE `REG_WIDTH'h40000000
+`define FLASH_END_ADDR `REG_WIDTH'h40020000
 
 `define UART_ADDR_BASE `REG_WIDTH'hF0000000
 

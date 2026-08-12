@@ -10,3 +10,9 @@ verification/sim/simv
 verification/sim/*.key
 .ver*
 *.tar.gz
+*.o
+*.bin
+*.data
+*.dump
+tools
+freertos
