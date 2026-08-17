@@ -9,26 +9,24 @@ module simple_bus(
     input slv1_ready,
     input [`BUS_ADDR_DATA_WIDTH - 1: 0]slv1_rd_data,
     // slave0
-    output slv0_we,
-    output slv0_sel,
-    output slv0_penable,
-    output [`BUS_ADDR_WIDTH -1 : 0]slv0_addr,
-    output [`BUS_ADDR_DATA_WIDTH - 1: 0]slv0_wdata,
+    output reg slv0_we,
+    output reg slv0_sel,
+    output reg slv0_penable,
+    output reg [`BUS_ADDR_WIDTH -1 : 0]slv0_addr,
+    output reg [`BUS_ADDR_DATA_WIDTH - 1: 0]slv0_wdata,
     // slave1
-    output slv1_we,
-    output slv1_sel,
-    output slv1_penable,
-    output [`BUS_ADDR_WIDTH -1 : 0]slv1_addr,
-    output [`BUS_ADDR_DATA_WIDTH - 1: 0]slv1_wdata,
-    output slv_ready,
-    output [`BUS_ADDR_DATA_WIDTH - 1: 0]mst0_rdata
+    output reg slv1_we,
+    output reg slv1_sel,
+    output reg slv1_penable,
+    output reg [`BUS_ADDR_WIDTH -1 : 0]slv1_addr,
+    output reg [`BUS_ADDR_DATA_WIDTH - 1: 0]slv1_wdata,
+    output reg slv_ready,
+    output reg [`BUS_ADDR_DATA_WIDTH - 1: 0]mst0_rdata
 );
     wire [`MST_ADDR_SEL_WIDTH -1: 0]mst_sel_addr;
 
-    mst_sel_addr = mst0_addr[`BUS_ADDR_WIDTH -1: `BUS_ADDR_WIDTH - `MST_ADDR_SEL_WIDTH];
+    assign mst_sel_addr = mst0_addr[`BUS_ADDR_WIDTH -1: `BUS_ADDR_WIDTH - `MST_ADDR_SEL_WIDTH];
     always @(*) begin
-        slv0_sel = 0;
-        slv1_sel = 0;
         case (mst_sel_addr)
             `SLV0_ADDR_HI: begin
                 slv0_sel = 1;
@@ -51,6 +49,8 @@ module simple_bus(
             default: begin
                 slv0_sel = 0;
                 slv1_sel = 0;
+                slv_ready = 0;
+                mst0_rdata = 0;
             end
         endcase
     end

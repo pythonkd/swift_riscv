@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 20:34:33
+ * @LastEditTime: 2026-08-17 22:22:14
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 
  * 
@@ -18,12 +18,14 @@ module alu(
     input [`REG_WIDTH - 1: 0]rs2_data,
     input [`REG_WIDTH - 1: 0]csr_rd_data,
     input [`REG_WIDTH - 1:0]mem_rd_data,
+    input mem_rd_valid,
     output reg reg_we,
     output reg mem_we,
     output reg csr_we,
     output reg jump_en,
     output reg div_op_start,
-    output alu_hold_flag,
+    output alu_flush_flag,
+    output alu_stall_flag,
     output reg ecall_except,
     output reg ebreak_except,
     output reg [`INST_JUMP_WIDTH - 1: 0]jump,
@@ -31,6 +33,7 @@ module alu(
     output reg [`REG_WIDTH - 1: 0]rd_data,
     output reg [`REG_WIDTH - 1:0]mem_wr_data,
     output reg [`REG_WIDTH - 1:0]mem_addr,
+    output reg mem_req_valid,
     output reg [`REG_WIDTH - 1:0]csr_wr_data,
     output reg [`INST_CSR_WIDTH - 1:0]csr_wr_addr,
     output reg mret_occurred
@@ -43,11 +46,20 @@ module alu(
     wire [`INST_FUNC7_WIDTH - 1: 0]func7 = instruction[`INST_FUNC7_BASE + `INST_FUNC7_WIDTH - 1: `INST_FUNC7_BASE];
     wire [`INST_FUNC5_WIDTH - 1: 0]func5 = instruction[`INST_FUNC5_BASE + `INST_FUNC5_WIDTH - 1: `INST_FUNC5_BASE];
     wire [`INST_CSR_WIDTH - 1:0] csr = instruction[`INST_CSR_BASE+`INST_CSR_WIDTH-1:`INST_CSR_BASE];
-    reg jump_hold_flag;
+
+    reg mem_load_stall_bus;
     reg div_hold_flag;
 
-    assign jump_hold_flag = ecall_except || ebreak_except || jump_en;
-    assign alu_hold_flag = jump_hold_flag || div_hold_flag;
+    assign alu_flush_flag = ecall_except || ebreak_except || jump_en;
+    assign alu_stall_flag = div_hold_flag || mem_load_stall_bus;
+
+    always @(*) begin
+        case(opcode)
+            `INST_OPCODE_IL_TYPE,
+            `INST_OPCODE_S_TYPE: mem_req_valid = 1'b1;
+            default: mem_req_valid = 1'b0;
+        endcase
+    end
     // EI, ECALL/EBREAK
     always @(*) begin
         case (opcode)
@@ -57,36 +69,64 @@ module alu(
         endcase
     end
 
+    // EI: EBREAK\ECALL\CSR
     always @(*) begin
         ecall_except = 0;
         ebreak_except = 0;
         mret_occurred = 0;
+        csr_we = 0;
         case (opcode)
             `INST_OPCODE_EI_TYPE: begin
-                reg_we = 1'b0;
+                reg_we = 1'b1;
                 mem_we = 1'b0;
                 jump_en = 1'b0;
-                case (func7)
-                    `INST_OPCODE_EI_ECALL: begin
-                        ecall_except = 1;
-                        csr_we = 1'b1;
-                        csr_wr_data = instruction_addr;
-                        csr_wr_addr = `CSR_MEPC;
+                csr_we = 1'b1;
+                csr_wr_addr = csr;
+                imm = {27'h0, instruction[19:15]};
+                rd_data = csr_rd_data;
+                case(func3)
+                    `INST_FUNC3_EI_TYPE: begin
+                        reg_we = 1'b0;
+                        case (func7)
+                            `INST_OPCODE_EI_ECALL: begin
+                                ecall_except = 1;
+                                csr_wr_data = instruction_addr;
+                                csr_wr_addr = `CSR_MEPC;
+                            end
+                            `INST_OPCODE_EI_EREAK: begin
+                                ebreak_except = 1;
+                                csr_wr_data = instruction_addr;
+                                csr_wr_addr = `CSR_MEPC;
+                            end
+                            `INST_OPCODE_EI_MRET: begin
+                                mret_occurred = 1'b1;
+                                csr_we = 1'b0;
+                            end
+                        endcase
                     end
-                    `INST_OPCODE_EI_EREAK: begin
-                        ebreak_except = 1;
-                        csr_we = 1'b1;
-                        csr_wr_data = instruction_addr;
-                        csr_wr_addr = `CSR_MEPC;
+                    `INST_OPCODE_CSR_CSRRW: begin
+                        csr_wr_data = rs1_data;
                     end
-                    `INST_OPCODE_EI_MRET: begin
-                        mret_occurred = 1'b1;
-                        csr_we = 1'b0;
+                    `INST_OPCODE_CSR_CSRRS: begin
+                        csr_wr_data = csr_rd_data | rs1_data;
+                    end
+                    `INST_OPCODE_CSR_CSRRC: begin
+                        csr_wr_data = csr_rd_data & (~rs1_data);
+                    end
+                    `INST_OPCODE_CSR_CSRRWI: begin
+                        csr_wr_data = imm;
+                    end
+                    `INST_OPCODE_CSR_CSRRSI: begin
+                        csr_wr_data = csr_rd_data | imm;
+                    end
+                    `INST_OPCODE_CSR_CSRRCI: begin
+                        csr_wr_data = csr_rd_data & ~imm;
                     end
                 endcase
             end
         endcase
     end
+
     // FENCE
     always @(*) begin
         case (opcode)
@@ -210,23 +250,27 @@ module alu(
                 jump_en = 1'b0;
                 mem_addr = rs1_data + imm;
                 imm = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
-                case(func3)
-                    `INST_OPCODE_IL_LB: begin
-                        rd_data = {{(`REG_WIDTH - 8){mem_rd_data[7]}}, mem_rd_data[7: 0]};
-                    end
-                    `INST_OPCODE_IL_LH: begin
-                        rd_data = {{(`REG_WIDTH - 16){mem_rd_data[15]}}, mem_rd_data[15: 0]};
-                    end
-                    `INST_OPCODE_IL_LW: begin
-                        rd_data = mem_rd_data[31: 0];
-                    end
-                    `INST_OPCODE_IL_LBU: begin
-                        rd_data = {{(`REG_WIDTH - 8){1'b0}}, mem_rd_data[7: 0]};
-                    end
-                    `INST_OPCODE_IL_LHU: begin
-                        rd_data = {{(`REG_WIDTH - 16){1'b0}}, mem_rd_data[15: 0]};
-                    end
-                endcase
+                mem_load_stall_bus = 1'b1;
+                if (mem_rd_valid) begin
+                    mem_load_stall_bus = 1'b0;
+                    case(func3)
+                        `INST_OPCODE_IL_LB: begin
+                            rd_data = {{(`REG_WIDTH - 8){mem_rd_data[7]}}, mem_rd_data[7: 0]};
+                        end
+                        `INST_OPCODE_IL_LH: begin
+                            rd_data = {{(`REG_WIDTH - 16){mem_rd_data[15]}}, mem_rd_data[15: 0]};
+                        end
+                        `INST_OPCODE_IL_LW: begin
+                            rd_data = mem_rd_data[31: 0];
+                        end
+                        `INST_OPCODE_IL_LBU: begin
+                            rd_data = {{(`REG_WIDTH - 8){1'b0}}, mem_rd_data[7: 0]};
+                        end
+                        `INST_OPCODE_IL_LHU: begin
+                            rd_data = {{(`REG_WIDTH - 16){1'b0}}, mem_rd_data[15: 0]};
+                        end
+                    endcase
+                end
             end
         endcase
     end
@@ -257,6 +301,7 @@ module alu(
 
     // OP B
     always @(*) begin
+        jump = 0;
         case (opcode)
             `INST_OPCODE_B_TYPE: begin
                 reg_we = 1'b0;
@@ -352,40 +397,6 @@ module alu(
         endcase
     end
 
-    // CSR
-    always @(*) begin
-        case (opcode)
-            `INST_OPCODE_CSR_TYPE: begin
-                rd_data = csr_rd_data;
-                reg_we = 1'b1;
-                csr_we = 1'b1;
-                mem_we = 1'b0;
-                jump_en = 1'b0;
-                imm = {27'h0, instruction[19:15]};
-                csr_wr_addr = csr;
-                case(func3)
-                    `INST_OPCODE_CSR_CSRRW: begin
-                        csr_wr_data = rs1_data;
-                    end
-                    `INST_OPCODE_CSR_CSRRS: begin
-                        csr_wr_data = csr_rd_data | rs1_data;
-                    end
-                    `INST_OPCODE_CSR_CSRRC: begin
-                        csr_wr_data = csr_rd_data & (~rs1_data);
-                    end
-                    `INST_OPCODE_CSR_CSRRWI: begin
-                        csr_wr_data = imm;
-                    end
-                    `INST_OPCODE_CSR_CSRRSI: begin
-                        csr_wr_data = csr_rd_data | imm;
-                    end
-                    `INST_OPCODE_CSR_CSRRCI: begin
-                        csr_wr_data = csr_rd_data & ~imm;
-                    end
-                endcase
-            end
-        endcase
-    end
     // MUL
     wire [`REG_WIDTH-1: 0] mul_result;
     always @(*) begin
@@ -427,9 +438,9 @@ module alu(
     reg pre_ready;
 
     always @(*) begin
+        div_hold_flag = 1'b0;
         case (opcode)
             `INST_OPCODE_R_TYPE: begin
-                div_hold_flag = 1'b0;
                 case (func7)
                     `INST_R_FUNC7_MUL_TYPE: begin
                         case (func3)

@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 18:02:19
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 21:34:50
+ * @LastEditTime: 2026-08-16 18:25:15
  * @FilePath: /swift_riscv/rtl/core/pc_mux.v
  * @Description: 
  * 
@@ -11,7 +11,6 @@
 
 
 module pc_mux(
-    input stop,
     input jump_en,
     input hold_flag,
     input exception,
@@ -25,21 +24,20 @@ module pc_mux(
     input mret_jump,
     output reg [`REG_WIDTH - 1: 0]nx_pc
 );
-    always @(*)
-        if (stop)
-            nx_pc = cur_pc0;
-        else if(jump_en && (jump == `INST_JUMP_JAL))
-            nx_pc = cur_pc2 + imm;
-        else if(jump_en && (jump == `INST_JUMP_JALR))
-            nx_pc = imm + rs1_data;
-        else if(jump_en && (jump == `INST_JUMP_B))
-            nx_pc = cur_pc2 + imm;
-        else if(hold_flag)
-            nx_pc = cur_pc0;
-        else if(exception)
+    always @(*) begin
+        nx_pc = cur_pc0 + `REG_WIDTH'h4;
+        if (jump_en) begin
+            case(jump)
+                `INST_JUMP_JAL: nx_pc = cur_pc2 + imm;
+                `INST_JUMP_JALR: nx_pc = imm + rs1_data;
+                `INST_JUMP_B: nx_pc = cur_pc2 + imm;
+                default: nx_pc = cur_pc0 + `REG_WIDTH'h4;
+            endcase
+        end else if(exception)
             nx_pc = csr_mtvec;
         else if (mret_jump)
             nx_pc = csr_mepc;
-        else
-            nx_pc = cur_pc0 + `REG_WIDTH'h4;
+        else if(hold_flag)
+            nx_pc = cur_pc0;
+    end
 endmodule

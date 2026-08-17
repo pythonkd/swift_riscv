@@ -14,5 +14,6 @@ verification/sim/*.key
 *.bin
 *.data
 *.dump
+*.map
 tools
 freertos

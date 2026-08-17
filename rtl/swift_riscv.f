@@ -22,3 +22,6 @@ $ROOT_PATH/rtl/core/addr_mux.v
 $ROOT_PATH/rtl/core/mtimer.v
 $ROOT_PATH/rtl/core/if_to_decode_dff.v
 $ROOT_PATH/rtl/core/decode_to_alu_dff.v
+$ROOT_PATH/rtl/bus/simple_bus.v
+$ROOT_PATH/rtl/flash/flash.v
+$ROOT_PATH/rtl/uart/uart.v

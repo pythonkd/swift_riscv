@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-12 22:25:19
+ * @LastEditTime: 2026-08-17 21:41:07
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -28,7 +28,8 @@ module core_top (
     wire csr_we_pipe2;
     wire jump_en_pipe2;
     wire div_op_start;
-    wire alu_hold_flag_pipe2;
+    wire alu_flush_flag;
+    wire alu_stall_flag;
     wire data_err;
     wire instruction_err;
     wire instruction_decode_err;
@@ -37,6 +38,8 @@ module core_top (
     wire exception;
     wire mret_occurred_pipe2;
     wire mret_jump;
+    wire mem_req_valid;
+    wire mem_rd_valid;
     wire [`REG_WIDTH - 1:0]mem_rd_data_pipe2;
     wire [`REG_WIDTH - 1:0]mem_addr_pipe2;
     wire [`REG_WIDTH - 1:0]mem_wr_data_pipe2;
@@ -54,6 +57,9 @@ module core_top (
     wire [`INST_WIDTH-1: 0]instruction_pipe0;
     wire [`INST_WIDTH-1: 0]instruction_pipe1;
     wire [`INST_WIDTH-1: 0]instruction_pipe2;
+    wire instruction_valid_pipe0;
+    wire instruction_valid_pipe1;
+    wire instruction_valid_pipe2;
     wire [`REG_WIDTH - 1: 0]imm_pipe2;
     wire [`INST_RS1_WIDTH  - 1: 0]rs1_index_pipe1;
     wire [`INST_RS1_WIDTH  - 1: 0]rs2_index_pipe1;
@@ -101,14 +107,25 @@ module core_top (
     wire [`REG_WIDTH - 1: 0]clint_to_cpu_data;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_data;
+    wire extern_data_ready;
     wire bus_hold_cpu;
     wire hold_cpu;
     wire clint_hold_flag;
-
+    wire if_flush_flag;
+    wire if_stall_flag;
+    wire decode_flush_flag;
+    wire decode_stall_flag;
     assign sync_except = instruction_err || instruction_decode_err || ebreak_except_pipe2 || ecall_except_pipe2 || data_err;
     assign async_except = ex_int_process || (mtimer_int & mtimer_int_en);
     assign exception = sync_except || (async_except & global_int_en);
-    assign hold_cpu = bus_hold_cpu || alu_hold_flag_pipe2 || clint_hold_flag;
+    assign decode_flush_flag = alu_flush_flag || clint_hold_flag || sync_except || async_except;
+    assign decode_stall_flag = alu_stall_flag;
+
+    assign if_flush_flag = decode_flush_flag;
+    assign if_stall_flag = decode_stall_flag;
+
+    assign hold_cpu = stop || bus_hold_cpu || alu_flush_flag || alu_stall_flag || clint_hold_flag;
+    
     pc_reg u_pc_reg(
         //input
         .clk(clk),
@@ -121,7 +138,6 @@ module core_top (
 
     pc_mux u_pc_mux(
         // input
-        .stop(stop),
         .cur_pc0(cur_pc_pipe0),
         .cur_pc2(cur_pc_pipe2),
         .imm(imm_pipe2),
@@ -179,18 +195,22 @@ module core_top (
         // input
         .clk(clk),
         .rst_n(rst_n),
-        .hold_cpu(hold_cpu),
+        .flush_flag(if_flush_flag),
+        .stall_flag(if_stall_flag),
         .instruction_pipe0(instruction_pipe0),
+        .instruction_valid_pipe0(instruction_valid_pipe0),
         .cur_pc_pipe0(cur_pc_pipe0),
         .ex_int_src_pipe0(ex_int_src_pipe0),
         // output
         .ex_int_src_pipe1(ex_int_src_pipe1),
+        .instruction_valid_pipe1(instruction_valid_pipe1),
         .instruction_pipe1(instruction_pipe1),
         .cur_pc_pipe1(cur_pc_pipe1)
     );
 
     decode u_decode(
         //input
+        .instruction_valid(instruction_valid_pipe1),
         .instruction(instruction_pipe1),
         //output
         .csr_index(csr_rd_addr_pipe1),
@@ -201,19 +221,24 @@ module core_top (
     );
 
     decode_to_alu_dff u_decode_to_alu_dff(
+        // input
         .clk(clk),
         .rst_n(rst_n),
-        .hold_cpu(hold_cpu),
+        .flush_flag(decode_flush_flag),
+        .stall_flag(decode_stall_flag),
         .rs1_data_pipe1(rs1_data_pipe1),
         .rs2_data_pipe1(rs2_data_pipe1),
         .rd_index_pipe1(rd_index_pipe1),
         .instruction_pipe1(instruction_pipe1),
+        .instruction_valid_pipe1(instruction_valid_pipe1),
         .cur_pc_pipe1(cur_pc_pipe1),
         .csr_rd_data_pipe1(csr_rd_data_pipe1),
         .ex_int_src_pipe1(ex_int_src_pipe1),
+        // output
         .rs1_data_pipe2(rs1_data_pipe2),
         .rs2_data_pipe2(rs2_data_pipe2),
         .rd_index_pipe2(rd_index_pipe2),
+        .instruction_valid_pipe2(instruction_valid_pipe2),
         .instruction_pipe2(instruction_pipe2),
         .cur_pc_pipe2(cur_pc_pipe2),
         .csr_rd_data_pipe2(csr_rd_data_pipe2),
@@ -229,6 +254,7 @@ module core_top (
         .rs1_data(rs1_data_pipe2),
         .rs2_data(rs2_data_pipe2),
         .csr_rd_data(csr_rd_data_pipe2),
+        .mem_rd_valid(mem_rd_valid),
         .mem_rd_data(mem_rd_data_pipe2),
         //output
         .reg_we(reg_we_pipe2),
@@ -236,7 +262,8 @@ module core_top (
         .csr_we(csr_we_pipe2),
         .jump_en(jump_en_pipe2),
         .div_op_start(div_op_start),
-        .alu_hold_flag(alu_hold_flag_pipe2),
+        .alu_flush_flag(alu_flush_flag),
+        .alu_stall_flag(alu_stall_flag),
         .ecall_except(ecall_except_pipe2),
         .ebreak_except(ebreak_except_pipe2),
         .jump(jump_pipe2),
@@ -244,6 +271,7 @@ module core_top (
         .rd_data(rd_data_pipe2),
         .mem_wr_data(mem_wr_data_pipe2),
         .mem_addr(mem_addr_pipe2),
+        .mem_req_valid(mem_req_valid),
         .csr_wr_data(csr_wr_data_pipe2),
         .csr_wr_addr(csr_wr_addr_pipe2),
         .mret_occurred(mret_occurred_pipe2)
@@ -302,6 +330,7 @@ module core_top (
     addr_mux u_addr_mux(
         // input
         .instruction_addr(cur_pc_pipe0),
+        .mem_req_valid(mem_req_valid),
         .mem_addr(mem_addr_pipe2),
         .mem_wr_data(mem_wr_data_pipe2),
         .external_to_cpu_rd_data(external_to_cpu_rd_data),
@@ -310,14 +339,18 @@ module core_top (
         .mtimer_to_cpu_data(mtimer_to_cpu_data),
         .clint_to_cpu_data(clint_to_cpu_data),
         .data_we(mem_we_pipe2),
+        .extern_data_ready(extern_data_ready),
         // output
+        .bus_hold_cpu(bus_hold_cpu),
         .cpu_wr_dlm_en(cpu_wr_dlm_en_pipe2),
         .cpu_wr_ilm_en(cpu_wr_ilm_en_pipe2),
         .cpu_wr_external_en(cpu_wr_external_en),
         .cpu_wr_mtimer_en(cpu_wr_mtimer_en),
         .cpu_wr_clint_en(cpu_wr_clint_en),
         .instruction(instruction_pipe0),
+        .instruction_valid(instruction_valid_pipe0),
         .mem_rd_data(mem_rd_data_pipe2),
+        .mem_rd_valid(mem_rd_valid),
         .cpu_to_ilm_rd_addr(cpu_to_ilm_rd_addr_pipe0),
         .cpu_to_ilm_wr_addr(cpu_to_ilm_wr_addr_pipe2),
         .cpu_to_ilm_data(cpu_to_ilm_data_pipe2),
@@ -347,7 +380,7 @@ module core_top (
         .mst_addr(mst_addr),
         .mst_wdata(mst_wdata),
         .cpu_rd_data(external_to_cpu_rd_data),
-        .bus_hold_cpu(bus_hold_cpu)
+        .extern_data_ready(extern_data_ready)
     );
 
     clint u_clint(

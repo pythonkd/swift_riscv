@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-27 21:32:32
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 22:42:04
+ * @LastEditTime: 2026-08-16 00:41:22
  * @FilePath: /swift_riscv/rtl/core/csr_reg.v
  * @Description: 
  * 
@@ -96,11 +96,13 @@ module csr_reg(
     end
 
     // except end
-    always@(posedge clk or negedge rst_n)
+    always@(*) begin
+        mret_jump <= 1'b0;
         if (mret_occurred) begin
             mstatus[MIE_BIT] = mstatus[MPIE_BIT];
             mret_jump <= 1'b1;
         end
+    end
 
     always@(posedge clk or negedge rst_n) begin
         if (!rst_n)

@@ -3,11 +3,8 @@ ENTRY(_start)
 
 MEMORY
 {
-  FLASH : ORIGIN = 0x40000000, LENGTH = 128K
-
-  /* TCM 指令内存，业务代码拷贝过来运行，16K */
+  FLASH : ORIGIN = 0x80000000, LENGTH = 512K
   TCM (wxa!ri) : ORIGIN = 0x00000000, LENGTH = 16K
-  /* DCM 数据内存 data/bss/stack */
   DCM (wxa!ri) : ORIGIN = 0x10000000, LENGTH = 16K
 }
 

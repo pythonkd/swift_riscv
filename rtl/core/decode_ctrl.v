@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 22:00:12
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 17:31:57
+ * @LastEditTime: 2026-08-16 17:09:23
  * @FilePath: /swift_riscv/rtl/core/decode_ctrl.v
  * @Description: 
  * 
@@ -11,6 +11,7 @@
 
 
 module decode(
+    input instruction_valid,
     input [`INST_WIDTH - 1: 0]instruction,
     output reg [`INST_RD_WIDTH  - 1: 0]rd_index,
     output reg [`INST_RS1_WIDTH  - 1: 0]rs1_index,
@@ -32,64 +33,70 @@ module decode(
         rs2_index = 0;
         rd_index = 0;
         csr_index = 0;
-        case (opcode)
-            `INST_OPCODE_R_TYPE: begin
-                rs1_index = rs1;
-                rs2_index = rs2;
-                rd_index = rd;
-            end
-            `INST_OPCODE_I_TYPE, `INST_OPCODE_IL_TYPE: begin
-                rs1_index = rs1;
-                rd_index = rd;
-            end
-            `INST_OPCODE_S_TYPE: begin
-                rs1_index = rs1;
-                rs2_index = rs2;
-            end
-            `INST_OPCODE_B_TYPE: begin
-                rs1_index = rs1;
-                rs2_index = rs2;
-            end
-            `INST_OPCODE_AUIPC_TYPE, `INST_OPCODE_LUI_TYPE, `INST_OPCODE_JAL_TYPE: begin
-                rd_index = rd;
-            end
-            `INST_OPCODE_JALR_TYPE: begin
-                rd_index = rd;
-                rs1_index = rs1;
-            end
-            `INST_OPCODE_EI_TYPE, `INST_OPCODE_NOP_TYPE, `INST_OPCODE_FENCE_TYPE: begin
-            end
-            `INST_OPCODE_ATOMIC_TYPE: begin
-                case(func5)
-                    `INST_OPCODE_ATOMIC_LR: begin
-                        rs1_index = rs1;
-                    end
-                    `INST_OPCODE_ATOMIC_SC: begin
-                        rs1_index = rs1;
-                        rs2_index = rs2;
-                    end
-                    `INST_OPCODE_ATOMIC_ADD, `INST_OPCODE_ATOMIC_SWAP, `INST_OPCODE_ATOMIC_AND, `INST_OPCODE_ATOMIC_OR, `INST_OPCODE_ATOMIC_MAX, `INST_OPCODE_ATOMIC_MIN: begin
-                        rs1_index = rs1;
-                        rs2_index = rs2;
-                    end
-                endcase
-            end
-            `INST_OPCODE_CSR_TYPE:
-                case(func3)
-                    `INST_OPCODE_CSR_CSRRW, `INST_OPCODE_CSR_CSRRS, `INST_OPCODE_CSR_CSRRC: begin
-                        csr_index = csr;
-                        rs1_index = rs1;
-                    end
-                    `INST_OPCODE_CSR_CSRRWI, `INST_OPCODE_CSR_CSRRSI, `INST_OPCODE_CSR_CSRRCI: begin
-                        csr_index = csr;
-                    end
-                endcase
-            `INST_HOST_CPU_TYPE: begin
-            end
-            default: begin
-                instruction_decode_err = 1;
-            end
-        endcase
+        if (instruction_valid) begin
+            case (opcode)
+                `INST_OPCODE_R_TYPE: begin
+                    rs1_index = rs1;
+                    rs2_index = rs2;
+                    rd_index = rd;
+                end
+                `INST_OPCODE_I_TYPE, `INST_OPCODE_IL_TYPE: begin
+                    rs1_index = rs1;
+                    rd_index = rd;
+                end
+                `INST_OPCODE_S_TYPE: begin
+                    rs1_index = rs1;
+                    rs2_index = rs2;
+                end
+                `INST_OPCODE_B_TYPE: begin
+                    rs1_index = rs1;
+                    rs2_index = rs2;
+                end
+                `INST_OPCODE_AUIPC_TYPE, `INST_OPCODE_LUI_TYPE, `INST_OPCODE_JAL_TYPE: begin
+                    rd_index = rd;
+                end
+                `INST_OPCODE_JALR_TYPE: begin
+                    rd_index = rd;
+                    rs1_index = rs1;
+                end
+                `INST_OPCODE_EI_TYPE: begin
+                    case(func3)
+                        `INST_FUNC3_EI_TYPE: begin
+                        end
+                        `INST_OPCODE_CSR_CSRRW, `INST_OPCODE_CSR_CSRRS, `INST_OPCODE_CSR_CSRRC: begin
+                            csr_index = csr;
+                            rs1_index = rs1;
+                            rd_index = rd;
+                        end
+                        `INST_OPCODE_CSR_CSRRWI, `INST_OPCODE_CSR_CSRRSI, `INST_OPCODE_CSR_CSRRCI: begin
+                            csr_index = csr;
+                        end
+                    endcase
+                end
+                `INST_OPCODE_NOP_TYPE, `INST_OPCODE_FENCE_TYPE: begin
+                end
+                `INST_OPCODE_ATOMIC_TYPE: begin
+                    case(func5)
+                        `INST_OPCODE_ATOMIC_LR: begin
+                            rs1_index = rs1;
+                        end
+                        `INST_OPCODE_ATOMIC_SC: begin
+                            rs1_index = rs1;
+                            rs2_index = rs2;
+                        end
+                        `INST_OPCODE_ATOMIC_ADD, `INST_OPCODE_ATOMIC_SWAP, `INST_OPCODE_ATOMIC_AND, `INST_OPCODE_ATOMIC_OR, `INST_OPCODE_ATOMIC_MAX, `INST_OPCODE_ATOMIC_MIN: begin
+                            rs1_index = rs1;
+                            rs2_index = rs2;
+                        end
+                    endcase
+                end
+                `INST_HOST_CPU_TYPE: begin
+                end
+                default: begin
+                    instruction_decode_err = 1;
+                end
+            endcase
+        end
     end
 
 

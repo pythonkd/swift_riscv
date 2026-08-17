@@ -25,6 +25,19 @@ _start:
 	bltu a1, a2, 1b
 2:
 
+	/* Load instruction section */
+	la a0, __tcm_code_lma_start
+	la a1, __tcm_code_vma_start
+	la a2, __tcm_code_vma_end
+	bgeu a1, a2, 2f
+1:
+	lw t0, (a0)
+	sw t0, (a1)
+	addi a0, a0, 4
+	addi a1, a1, 4
+	bltu a1, a2, 1b
+2:
+
 	/* Clear bss section */
 	la a0, __bss_start
 	la a1, _end

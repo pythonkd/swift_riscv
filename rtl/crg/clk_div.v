@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-02 14:29:24
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-08 11:16:29
+ * @LastEditTime: 2026-08-14 21:27:58
  * @FilePath: /swift_riscv/rtl/crg/clk_div.v
  * @Description: 
  * 
@@ -10,32 +10,32 @@
  */
 
 module clk_div #(
-    parameter DIV_WIDTH = 16
+    parameter DW = 16,
+    parameter DEFAULT_VAL = 0
 ) (
     input clk,
     input rst_n,
-    input [DIV_WIDTH - 1: 0]divider,
-    input rst_val,
-    output wire clk_out
+    input [DW - 1: 0]div,
+    output wire o_clk
 );
-    reg [DIV_WIDTH - 1: 0] cnt;
-    reg [DIV_WIDTH - 1: 0] div_cur;
-    reg clk_out_tmp;
+    reg [DW - 1: 0] cnt;
+    reg [DW - 1: 0] div_cur;
+    reg o_clk_tmp;
 
-    assign clk_out = divider <= 1 ? clk : clk_out_tmp;
+    assign o_clk = div <= 1 ? clk : o_clk_tmp;
     always @(posedge clk or negedge rst_n)
         if (!rst_n) begin
             cnt <= 0;
-            clk_out_tmp <= rst_val;
+            o_clk_tmp <= DEFAULT_VAL;
             div_cur <= 1;
         end
-        else if (div_cur != divider) begin
+        else if (div_cur != div) begin
             cnt <= 0;
-            clk_out_tmp <= rst_val;
-            div_cur <= divider ? divider : 1;
+            o_clk_tmp <= DEFAULT_VAL;
+            div_cur <= div ? div : 1;
         end
         else if (cnt == ((div_cur >> 1) - 1)) begin
-            clk_out_tmp <= ~clk_out_tmp;
+            o_clk_tmp <= ~o_clk_tmp;
             cnt <= 0;
         end
         else

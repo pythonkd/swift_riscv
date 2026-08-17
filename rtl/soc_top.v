@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-02 20:35:24
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-12 23:04:34
+ * @LastEditTime: 2026-08-16 00:17:30
  * @FilePath: /swift_riscv/rtl/soc_top.v
  * @Description: 
  * 
@@ -20,13 +20,14 @@ module soc_top (
     wire uart_rst;
     wire uart_int;
     wire mtimer_clk;
+    wire flash_clk;
+    wire flash_rst;
     wire mst0_penable;
     wire slv_ready;
     wire mst0_we;
-    wire [`REG_WIDTH - 1: 0]mst0_rdata
+    wire [`REG_WIDTH - 1: 0]mst0_rdata;
     wire [`REG_WIDTH - 1: 0]mst0_addr;
     wire [`REG_WIDTH - 1: 0]mst0_wdata;
-    wire [`REG_WIDTH - 1: 0]slv_rd_data;
     wire slv0_we;
     wire slv0_sel;
     wire slv0_ready;
@@ -52,7 +53,9 @@ module soc_top (
         .apb_clk(apb_clk),
         .uart_clk(uart_clk),
         .core_rst(core_rst),
-        .uart_rst(uart_rst)
+        .uart_rst(uart_rst),
+        .flash_clk(flash_clk),
+        .flash_rst(flash_rst)
     );
 
     core_top u_core_top(
@@ -61,7 +64,7 @@ module soc_top (
         .rst_n(core_rst),
         .mtimer_clk(mtimer_clk),
         .uart_int(uart_int),
-        .slv_rd_data(slv_rd_data),
+        .slv_rd_data(mst0_rdata),
         .slv_ready(slv_ready),
         .p_enable(mst0_penable),
         .mst_we(mst0_we),
@@ -92,6 +95,30 @@ module soc_top (
         .slv1_wdata(slv1_wdata),
         .slv_ready(slv_ready),
         .mst0_rdata(mst0_rdata)
+    );
+
+    uart u_uart(
+        .clk(uart_clk),
+        .rst_n(uart_rst),
+        .slv_sel(slv1_sel),
+        .slv_we(slv1_we),
+        .slv_penable(slv1_penable),
+        .slv_addr(slv1_addr),
+        .slv_wdata(slv1_wdata),
+        .slv_ready(slv1_ready),
+        .slv_rdata(slv1_rd_data)
+    );
+
+    flash u_flash(
+        .clk(flash_clk),
+        .rst_n(flash_rst),
+        .slv_sel(slv0_sel),
+        .slv_we(slv0_we),
+        .slv_penable(slv0_penable),
+        .slv_addr(slv0_addr),
+        .slv_wdata(slv0_wdata),
+        .slv_ready(slv0_ready),
+        .slv_rdata(slv0_rd_data)
     );
 
 endmodule

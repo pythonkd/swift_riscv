@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-26 11:55:57
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-08 15:34:44
+ * @LastEditTime: 2026-08-16 22:54:02
  * @FilePath: /swift_riscv/rtl/utils/dll.v
  * @Description: 
  * 
@@ -57,6 +57,36 @@ module gen_hold_default_dff #(
             pipe[i] <= DEFAULT_VAL;
     end
     else begin
+      pipe[0] <= din;
+      for (i = 1; i < STAGS; i = i + 1) pipe[i] <= pipe[i-1];
+    end
+
+  always @(*) dout = pipe[STAGS-1];
+
+endmodule
+
+module gen_stall_flush_default_dff #(
+    parameter DW = 32,
+    parameter STAGS = 1,
+    parameter DEFAULT_VAL = 0
+) (
+    input               clk,
+    input               rst_n,
+    input               stall_en,
+    input               flush_en,
+    input               [DW-1:0] din,
+    output reg          [DW-1:0] dout
+);
+  reg     [DW-1:0] pipe[0:STAGS-1];
+  integer          i;
+  always @(posedge clk or negedge rst_n)
+    if (!rst_n | flush_en) begin
+        for(i = 0; i < STAGS; i = i + 1)
+            pipe[i] <= DEFAULT_VAL;
+    end
+    else if(stall_en) begin
+        dout <= dout;
+    end else begin
       pipe[0] <= din;
       for (i = 1; i < STAGS; i = i + 1) pipe[i] <= pipe[i-1];
     end
