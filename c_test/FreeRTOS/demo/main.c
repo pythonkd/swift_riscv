@@ -72,31 +72,29 @@ void vApplicationTickHook(void)
 
 /*-----------------------------------------------------------*/
 static void
-demo_test(void *pvParameters)
+demo_test(void)
 {
+	char test_demo[] = "test_demo";
+	char *print_addr = (char *)(0x90000004);
+	int i = 0;
+	for (i = 0; i < 5; i++)
+	{
+		*print_addr = test_demo[i];
+	}
+	// printf("%s\n", test_demo);
 }
 
 int main(void)
 {
+	demo_test();
+	// xTaskCreate(demo_test,				  /* The function that implements the task. */
+	// 			"demo",					  /* The text name assigned to the task - for debug only as it is not used by the kernel. */
+	// 			configMINIMAL_STACK_SIZE, /* The size of the stack to allocate to the task. */
+	// 			NULL,					  /* The parameter passed to the task - not used in this case. */
+	// 			2,						  /* The priority assigned to the task. */
+	// 			NULL);					  /* The task handle is not required, so NULL is passed. */
 
-	/* Start the two tasks as described in the comments at the top of this
-	file. */
-	xTaskCreate(demo_test,				  /* The function that implements the task. */
-				"demo",					  /* The text name assigned to the task - for debug only as it is not used by the kernel. */
-				configMINIMAL_STACK_SIZE, /* The size of the stack to allocate to the task. */
-				NULL,					  /* The parameter passed to the task - not used in this case. */
-				2,						  /* The priority assigned to the task. */
-				NULL);					  /* The task handle is not required, so NULL is passed. */
-
-	/* Start the tasks and timer running. */
-	vTaskStartScheduler();
-
-	/* If all is well, the scheduler will now be running, and the following
-	line will never be reached.  If the following line does execute, then
-	there was insufficient FreeRTOS heap memory available for the Idle and/or
-	timer tasks to be created.  See the memory management section on the
-	FreeRTOS web site for more details on the FreeRTOS heap
-	http://www.freertos.org/a00111.html. */
+	// vTaskStartScheduler();
 	for (;;)
 		;
 }

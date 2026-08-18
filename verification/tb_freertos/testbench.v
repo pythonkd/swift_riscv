@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:09:51
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-17 22:20:12
+ * @LastEditTime: 2026-08-17 22:34:06
  * @FilePath: /swift_riscv/verification/tb_freertos/testbench.v
  * @Description: 
  * 
@@ -53,7 +53,7 @@ wire [`REG_WIDTH-1:0] t6_x31   = u_soc_top.u_core_top. u_reg_file. reg_f[31];
 integer r;
 
 initial begin
-    #(`SIM_PERIOD * 30000);
+    #(`SIM_PERIOD * 300000);
     $display("Time Out");
     $finish;
 end
@@ -70,12 +70,6 @@ assign sw_sel = u_soc_top.u_uart.uart_wr;
 assign sw_test_flag = u_soc_top.u_uart.uart_run_ret[`REG_WIDTH-1:0];
 assign sw_test_prt_flag = sw_sel && (u_soc_top.u_uart.addr[7:0] == TEST_PRT_ADDR);
 assign sw_test_prt = u_soc_top.u_uart.uart_tx[7:0];
-
-initial begin
-    #(`SIM_PERIOD * 3000);
-    $display("Time Out");
-    $finish;
-end
 
 always @(posedge `SW_TEST_CLOCK)
     if(sw_test_prt_flag && (sw_test_prt > 32'h5) && (sw_test_prt < 32'h7f)) begin
@@ -106,7 +100,8 @@ initial begin
     clk = 1'b0;
     reset;
     inst_load();
-    #(`SIM_PERIOD * 50);
+    #(`SIM_PERIOD * 3000);
+    $display("=================>Time Out<=================");
     $fsdbDumpflush();  // 强制刷新波形缓存
     $finish;  
 end

@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-17 22:22:14
+ * @LastEditTime: 2026-08-18 22:51:33
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 
  * 
@@ -242,6 +242,7 @@ module alu(
     end
     // OP IL
     always @(*) begin
+        mem_load_stall_bus = 0;
         case (opcode)
             `INST_OPCODE_IL_TYPE: begin
                 reg_we = 1'b1;

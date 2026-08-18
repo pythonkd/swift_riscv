@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-17 21:41:07
+ * @LastEditTime: 2026-08-18 22:53:01
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -173,7 +173,7 @@ module core_top (
         .mem_wr_data(cpu_to_dlm_data_pipep2),
         .mem_we(cpu_wr_dlm_en_pipe2),
         //output
-        .mem_rd_data(mem_rd_data_pipe2),
+        .mem_rd_data(dlm_to_cpu_data),
         .data_err(data_err)
     );
 

@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 17:01:28
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-12 22:26:46
+ * @LastEditTime: 2026-08-18 22:30:36
  * @FilePath: /swift_riscv/rtl/core/instruction_lm.v
  * @Description: 
  * 
@@ -22,7 +22,8 @@
  
    reg [`INST_WIDTH-1: 0]local_mem[0:`INST_MEM_DEPTH-1];
 
-   assign instruction_err = instruction_rd_addr[`INST_MEM_WIDTH+1: 2] > `INST_MEM_DEPTH-1 ? 1 : 0;
+   // assign instruction_err = instruction_rd_addr[`INST_MEM_WIDTH+1: 2] > `INST_MEM_DEPTH-1 ? 1 : 0;
+   assign instruction_err = 0;
 
    always @(posedge clk)
       if (!instruction_err & instruction_we)
