@@ -108,7 +108,8 @@ module core_top (
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_data;
     wire extern_data_ready;
-    wire bus_hold_cpu;
+    wire bus_stall_if;
+    wire bus_stall_cpu;
     wire hold_cpu;
     wire clint_hold_flag;
     wire if_flush_flag;
@@ -119,12 +120,11 @@ module core_top (
     assign async_except = ex_int_process || (mtimer_int & mtimer_int_en);
     assign exception = sync_except || (async_except & global_int_en);
     assign decode_flush_flag = alu_flush_flag || clint_hold_flag || sync_except || async_except;
-    assign decode_stall_flag = alu_stall_flag;
+    assign decode_stall_flag = alu_stall_flag || bus_stall_cpu;
 
     assign if_flush_flag = decode_flush_flag;
-    assign if_stall_flag = decode_stall_flag;
-
-    assign hold_cpu = stop || bus_hold_cpu || alu_flush_flag || alu_stall_flag || clint_hold_flag;
+    assign if_stall_flag = decode_stall_flag || bus_stall_if;
+    assign hold_cpu = stop || bus_stall_cpu || alu_flush_flag || alu_stall_flag || clint_hold_flag || bus_stall_if;
     
     pc_reg u_pc_reg(
         //input
@@ -329,6 +329,8 @@ module core_top (
 
     addr_mux u_addr_mux(
         // input
+        .clk(clk),
+        .rst_n(rst_n),
         .instruction_addr(cur_pc_pipe0),
         .mem_req_valid(mem_req_valid),
         .mem_addr(mem_addr_pipe2),
@@ -341,7 +343,8 @@ module core_top (
         .data_we(mem_we_pipe2),
         .extern_data_ready(extern_data_ready),
         // output
-        .bus_hold_cpu(bus_hold_cpu),
+        .bus_stall_if(bus_stall_if),
+        .bus_stall_cpu(bus_stall_cpu),
         .cpu_wr_dlm_en(cpu_wr_dlm_en_pipe2),
         .cpu_wr_ilm_en(cpu_wr_ilm_en_pipe2),
         .cpu_wr_external_en(cpu_wr_external_en),
@@ -391,7 +394,7 @@ module core_top (
         .mret_occurred(mret_occurred_pipe2),
         .global_int_en(global_int_en),
         .ex_int_en(ex_int_en),
-        .hold_flag(alu_hold_flag_pipe2),
+        .hold_flag(alu_stall_flag),
         .clint_wr_addr(cpu_to_clint_addr),
         .clint_wr_data(cpu_to_clint_data),
         .clint_we(cpu_wr_clint_en),

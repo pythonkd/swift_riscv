@@ -26,7 +26,8 @@ module addr_mux(
     output reg cpu_wr_external_en,
     output reg cpu_wr_mtimer_en,
     output reg cpu_wr_clint_en,
-    output bus_hold_cpu,
+    output bus_stall_cpu,
+    output bus_stall_if,
     output instruction_valid,
     output mem_rd_valid,
     output reg [`REG_WIDTH - 1: 0]instruction,
@@ -47,10 +48,11 @@ module addr_mux(
     wire if_need_external;
     reg  external_grant_mem;
 
-    assign mem_need_external = mem_req_valid && (mem_addr >= `CLINT_END_ADDR);
+    assign mem_need_external = (mem_addr >= `CLINT_END_ADDR);
     assign if_need_external  = (instruction_addr >= `ILM_END_ADDR);
 
-    assign bus_hold_cpu = if_need_external && ~extern_data_ready;
+    assign bus_stall_cpu = (if_need_external && ~extern_data_ready);
+    assign bus_stall_if = mem_need_external;
     assign instruction_valid = if_need_external ? extern_data_ready: 1'b1;
     assign mem_rd_valid = mem_need_external && (~data_we) ? extern_data_ready: 1'b1;
     always @(*) begin

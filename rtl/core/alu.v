@@ -47,11 +47,10 @@ module alu(
     wire [`INST_FUNC5_WIDTH - 1: 0]func5 = instruction[`INST_FUNC5_BASE + `INST_FUNC5_WIDTH - 1: `INST_FUNC5_BASE];
     wire [`INST_CSR_WIDTH - 1:0] csr = instruction[`INST_CSR_BASE+`INST_CSR_WIDTH-1:`INST_CSR_BASE];
 
-    reg mem_load_stall_bus;
     reg div_hold_flag;
 
     assign alu_flush_flag = ecall_except || ebreak_except || jump_en;
-    assign alu_stall_flag = div_hold_flag || mem_load_stall_bus;
+    assign alu_stall_flag = div_hold_flag;
 
     always @(*) begin
         case(opcode)
@@ -242,7 +241,7 @@ module alu(
     end
     // OP IL
     always @(*) begin
-        mem_load_stall_bus = 0;
+        mem_addr = 0;
         case (opcode)
             `INST_OPCODE_IL_TYPE: begin
                 reg_we = 1'b1;
@@ -251,9 +250,7 @@ module alu(
                 jump_en = 1'b0;
                 mem_addr = rs1_data + imm;
                 imm = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
-                mem_load_stall_bus = 1'b1;
                 if (mem_rd_valid) begin
-                    mem_load_stall_bus = 1'b0;
                     case(func3)
                         `INST_OPCODE_IL_LB: begin
                             rd_data = {{(`REG_WIDTH - 8){mem_rd_data[7]}}, mem_rd_data[7: 0]};
