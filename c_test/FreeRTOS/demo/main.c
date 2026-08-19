@@ -71,8 +71,18 @@ void vApplicationTickHook(void)
  */
 
 /*-----------------------------------------------------------*/
-static void
-demo_test(void)
+#define SIM_UART_BASE (0x90000000UL)
+typedef struct {
+    __IO uint32_t COMMAND;      // (0x00)
+    __IO uint8_t DISPLAY;       // (0x04)
+} SIM_UART_RegDef;
+#define SWIFT_RV_SIM_UART ((SIM_UART_RegDef *)SIM_UART_BASE)
+
+void sim_send_msg(uint32_t msg) { SWIFT_RV_SIM_UART->COMMAND = msg; }
+
+void uart_putc(int c) { SWIFT_RV_SIM_UART->DISPLAY = c; }
+
+static void demo_test(void)
 {
 	char test_demo[] = "test_demo";
 	char *print_addr = (char *)(0x90000004);

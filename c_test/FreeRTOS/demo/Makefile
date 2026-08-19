@@ -8,11 +8,13 @@ TARGET = freertos
 
 # RTL仿真时打开这行注释
 #CFLAGS += -DSIMULATION
-CFLAGS += -Os
+CFLAGS += -Os 
 ASM_SRCS := ../Source/portable/RISC-V/portASM.S
 #LDFLAGS +=
 INCLUDES += -I. -I../Source/portable/RISC-V -I../Source/include -I../../
 
+CFLAGS += -fno-strict-aliasing -fno-builtin-printf -fno-builtin-sprintf \
+	-fno-builtin-snprintf -fno-builtin-vsnprintf -fno-builtin-vprintf
 C_SRCS := \
 	main.c \
 	../Source/list.c \
