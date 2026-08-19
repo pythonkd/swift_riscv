@@ -239,10 +239,11 @@ module alu(
             end
         endcase
     end
-    // OP IL
+    
     always @(*) begin
-        mem_addr = 0;
+        mem_addr = {`REG_WIDTH{1'b0}};
         case (opcode)
+            // OP IL
             `INST_OPCODE_IL_TYPE: begin
                 reg_we = 1'b1;
                 mem_we = 1'b0;
@@ -270,11 +271,7 @@ module alu(
                     endcase
                 end
             end
-        endcase
-    end
-    // OP S
-    always @(*) begin
-        case (opcode)
+            // OP S
             `INST_OPCODE_S_TYPE: begin
                 reg_we = 1'b0;
                 mem_we = 1'b1;
