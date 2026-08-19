@@ -329,8 +329,6 @@ module core_top (
 
     addr_mux u_addr_mux(
         // input
-        .clk(clk),
-        .rst_n(rst_n),
         .instruction_addr(cur_pc_pipe0),
         .mem_req_valid(mem_req_valid),
         .mem_addr(mem_addr_pipe2),
