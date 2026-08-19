@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:47
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-16 17:54:27
+ * @LastEditTime: 2026-08-19 22:44:01
  * @FilePath: /swift_riscv/rtl/swift_riscv_defines.v
  * @Description: 
  * 
@@ -198,8 +198,8 @@
 `define ILM_ADDR_BASE `REG_WIDTH'h0
 `define ILM_END_ADDR `REG_WIDTH'h4000
 
-`define DLM_ADDR_BASE `REG_WIDTH'h4000
-`define DLM_END_ADDR `REG_WIDTH'h8000
+`define DLM_ADDR_BASE `REG_WIDTH'h10000000
+`define DLM_END_ADDR `REG_WIDTH'h10004000
 
 `define MTIMER_ADDR_BASE `REG_WIDTH'h20000000
 `define MTIMER_END_ADDR `REG_WIDTH'h20001000

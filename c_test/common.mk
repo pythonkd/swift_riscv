@@ -30,7 +30,7 @@ C_OBJS := $(C_SRCS:.c=.o)
 LINK_OBJS += $(ASM_OBJS) $(C_OBJS)
 LINK_DEPS += $(LINKER_SCRIPT)
 
-CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(TARGET).dump $(TARGET).bin
+CLEAN_OBJS += $(TARGET) $(LINK_OBJS) $(TARGET).dump $(TARGET).bin $(TARGET).map $(TARGET).data
 
 CFLAGS += -march=$(RISCV_ARCH)
 CFLAGS += -mabi=$(RISCV_ABI)

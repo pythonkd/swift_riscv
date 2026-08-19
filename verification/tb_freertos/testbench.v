@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:09:51
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-17 22:34:06
+ * @LastEditTime: 2026-08-19 22:33:53
  * @FilePath: /swift_riscv/verification/tb_freertos/testbench.v
  * @Description: 
  * 
@@ -100,7 +100,7 @@ initial begin
     clk = 1'b0;
     reset;
     inst_load();
-    #(`SIM_PERIOD * 3000);
+    #(`SIM_PERIOD * 7000);
     $display("=================>Time Out<=================");
     $fsdbDumpflush();  // 强制刷新波形缓存
     $finish;  
