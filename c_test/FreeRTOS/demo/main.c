@@ -75,23 +75,23 @@ void vApplicationTickHook(void)
 typedef struct
 {
 	uint32_t COMMAND; // (0x00)
-	uint8_t DISPLAY;  // (0x04)
+	uint32_t DISPLAY; // (0x04)
 } SIM_UART_RegDef;
 #define SWIFT_RV_SIM_UART ((SIM_UART_RegDef *)SIM_UART_BASE)
 
 void sim_send_msg(uint32_t msg) { SWIFT_RV_SIM_UART->COMMAND = msg; }
 
-volatile void uart_putc(int c) { SWIFT_RV_SIM_UART->DISPLAY = c; }
+volatile void uart_putc(uint32_t c) { SWIFT_RV_SIM_UART->DISPLAY = c; }
 
 volatile void demo_test(void)
 {
-	char test_demo[] = "--------------test_demo-----------------\n";
-	int i = 0;
+	// char test_demo[] = "--------------test_demo-----------------\n";
+	// int i = 0;
 
-	for (i = 0; i < sizeof(test_demo) - 1; i++)
-	{
-		uart_putc(test_demo[i]);
-	}
+	// for (i = 0; i < sizeof(test_demo) - 1; i++)
+	// {
+	// 	uart_putc(test_demo[i]);
+	// }
 	uart_putc('A');
 	uart_putc('B');
 	uart_putc('C');
