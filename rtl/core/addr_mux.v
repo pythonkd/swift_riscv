@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-08 11:36:08
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-19 22:24:28
+ * @LastEditTime: 2026-08-20 23:04:24
  * @FilePath: /swift_riscv/rtl/core/addr_mux.v
  * @Description: 
  * 
@@ -16,7 +16,8 @@ module addr_mux(
     input [`REG_WIDTH - 1: 0]mem_addr,
     input [`REG_WIDTH - 1: 0]mem_wr_data,
     input [`REG_WIDTH - 1:0]external_to_cpu_rd_data,
-    input [`REG_WIDTH - 1: 0]ilm_to_cpu_data,
+    input [`REG_WIDTH - 1: 0]ilm_to_cpu_inst_data,
+    input [`REG_WIDTH - 1: 0]ilm_to_cpu_mem_data,
     input [`REG_WIDTH - 1: 0]dlm_to_cpu_data,
     input [`REG_WIDTH - 1: 0]mtimer_to_cpu_data,
     input [`REG_WIDTH - 1: 0]clint_to_cpu_data,
@@ -32,7 +33,8 @@ module addr_mux(
     output mem_rd_valid,
     output reg [`REG_WIDTH - 1: 0]instruction,
     output reg [`REG_WIDTH - 1:0]mem_rd_data,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_addr,
+    output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_inst_addr,
+    output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_mem_addr,
     output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_wr_addr,
     output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_data,
     output reg [`REG_WIDTH - 1: 0]cpu_to_dlm_addr,
@@ -65,9 +67,9 @@ module addr_mux(
 
     always @(*)
         if (instruction_addr < `ILM_END_ADDR) begin
-            cpu_to_ilm_rd_addr = instruction_addr;
+            cpu_to_ilm_rd_inst_addr = instruction_addr;
             cpu_to_external_addr = 0;
-            instruction = ilm_to_cpu_data;
+            instruction = ilm_to_cpu_inst_data;
         end else begin
             if (~external_grant_mem)
                 instruction = external_to_cpu_rd_data;
@@ -78,10 +80,14 @@ module addr_mux(
         cpu_wr_dlm_en = 0;
         cpu_wr_external_en = 0;
         if (mem_req_valid) begin
-            if ((mem_addr < `ILM_END_ADDR) && data_we) begin
-                cpu_to_ilm_wr_addr = mem_addr - `ILM_ADDR_BASE;
+            if (mem_addr < `ILM_END_ADDR) begin
+                if (data_we)
+                    cpu_to_ilm_wr_addr = mem_addr - `ILM_ADDR_BASE;
+                else
+                    cpu_to_ilm_rd_mem_addr = mem_addr - `ILM_ADDR_BASE;
                 cpu_wr_ilm_en = data_we;
                 cpu_to_ilm_data = mem_wr_data;
+                mem_rd_data = ilm_to_cpu_mem_data;
             end else if(mem_addr < `DLM_END_ADDR) begin
                 cpu_to_dlm_addr = mem_addr - `DLM_ADDR_BASE;
                 cpu_wr_dlm_en = data_we;

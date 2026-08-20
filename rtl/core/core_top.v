@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-18 22:53:01
+ * @LastEditTime: 2026-08-20 23:06:17
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -91,6 +91,8 @@ module core_top (
     wire cpu_wr_dlm_en_pipe2;
     wire cpu_wr_ilm_en_pipe2;
     wire cpu_wr_external_en;
+    wire [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_mem_addr;
+    wire [`REG_WIDTH - 1: 0]ilm_to_cpu_mem_data;
     wire [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_addr_pipe0;
     wire [`REG_WIDTH - 1: 0]cpu_to_ilm_wr_addr_pipe2;
     wire [`REG_WIDTH - 1: 0]cpu_to_ilm_data_pipe2;
@@ -156,12 +158,14 @@ module core_top (
     i_lm u_ilm(
         //input
         .clk(clk),
-        .instruction_wr_data(cpu_to_ilm_data_pipe2),
+        .mem_rd_addr(cpu_to_ilm_rd_mem_addr),
+        .mem_wr_data(cpu_to_ilm_data_pipe2),
         .instruction_we(cpu_wr_ilm_en_pipe2),
         .instruction_rd_addr(cpu_to_ilm_rd_addr_pipe0),
-        .instruction_wr_addr(cpu_to_ilm_wr_addr_pipe2),
+        .mem_wr_addr(cpu_to_ilm_wr_addr_pipe2),
         //output
         .instruction(ilm_to_cpu_data_pipe0),
+        .mem_rd_data(ilm_to_cpu_mem_data),
         .instruction_err(instruction_err)
     );
 
@@ -334,7 +338,8 @@ module core_top (
         .mem_addr(mem_addr_pipe2),
         .mem_wr_data(mem_wr_data_pipe2),
         .external_to_cpu_rd_data(external_to_cpu_rd_data),
-        .ilm_to_cpu_data(ilm_to_cpu_data_pipe0),
+        .ilm_to_cpu_inst_data(ilm_to_cpu_data_pipe0),
+        .ilm_to_cpu_mem_data(ilm_to_cpu_mem_data),
         .dlm_to_cpu_data(dlm_to_cpu_data),
         .mtimer_to_cpu_data(mtimer_to_cpu_data),
         .clint_to_cpu_data(clint_to_cpu_data),
@@ -352,7 +357,8 @@ module core_top (
         .instruction_valid(instruction_valid_pipe0),
         .mem_rd_data(mem_rd_data_pipe2),
         .mem_rd_valid(mem_rd_valid),
-        .cpu_to_ilm_rd_addr(cpu_to_ilm_rd_addr_pipe0),
+        .cpu_to_ilm_rd_inst_addr(cpu_to_ilm_rd_addr_pipe0),
+        .cpu_to_ilm_rd_mem_addr(cpu_to_ilm_rd_mem_addr),
         .cpu_to_ilm_wr_addr(cpu_to_ilm_wr_addr_pipe2),
         .cpu_to_ilm_data(cpu_to_ilm_data_pipe2),
         .cpu_to_dlm_addr(cpu_to_dlm_addr_pipe2),
