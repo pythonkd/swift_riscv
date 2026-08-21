@@ -36,6 +36,7 @@ module uart(
     always @(posedge clk or negedge rst_n)
         if (!rst_n) begin
             uart_tx <= 0;
+            uart_run_ret <= 0;
         end else begin
             if(uart_wr) begin
                 case (addr)

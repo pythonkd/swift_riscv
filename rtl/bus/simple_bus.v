@@ -27,6 +27,14 @@ module simple_bus(
 
     assign mst_sel_addr = mst0_addr[`BUS_ADDR_WIDTH -1: `BUS_ADDR_WIDTH - `MST_ADDR_SEL_WIDTH];
     always @(*) begin
+        slv0_sel = 0;
+        slv1_sel = 0;
+        slv_ready = 0;
+        mst0_rdata = 0;
+        slv0_penable = 0;
+        slv1_penable = 0;
+        slv0_we = 0;
+        slv1_we = 0;
         case (mst_sel_addr)
             `SLV0_ADDR_HI: begin
                 slv0_sel = 1;
@@ -45,12 +53,6 @@ module simple_bus(
                 slv1_we = mst0_we;
                 slv_ready = slv1_ready;
                 mst0_rdata = slv1_rd_data;
-            end
-            default: begin
-                slv0_sel = 0;
-                slv1_sel = 0;
-                slv_ready = 0;
-                mst0_rdata = 0;
             end
         endcase
     end
