@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-02 20:35:24
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-16 00:17:30
+ * @LastEditTime: 2026-08-23 20:49:24
  * @FilePath: /swift_riscv/rtl/soc_top.v
  * @Description: 
  * 
@@ -98,7 +98,7 @@ module soc_top (
     );
 
     uart u_uart(
-        .clk(uart_clk),
+        .pclk(core_clk),
         .rst_n(uart_rst),
         .slv_sel(slv1_sel),
         .slv_we(slv1_we),

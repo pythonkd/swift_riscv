@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-20 23:06:17
+ * @LastEditTime: 2026-08-23 22:00:28
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -381,6 +381,7 @@ module core_top (
         .cpu_we(cpu_wr_external_en),
         .slv_rd_data(slv_rd_data),
         .slv_ready(slv_ready),
+        .cpu_flush_bus(decode_flush_flag),
         // output
         .p_enable(p_enable),
         .mst_we(mst_we),

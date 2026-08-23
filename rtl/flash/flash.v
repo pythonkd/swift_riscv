@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-13 21:37:12
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-16 16:03:01
+ * @LastEditTime: 2026-08-23 22:31:45
  * @FilePath: /swift_riscv/rtl/flash/flash.v
  * @Description: 
  * 
@@ -29,7 +29,7 @@ module flash(
     reg flash_wr_ready;
     reg [`REG_WIDTH-1: 0]local_mem[0:FLASH_MEM_DEPTH - 1];
 
-    assign slv_ready = slv_we ? flash_wr_ready : flash_rd_ready;
+    assign slv_ready = flash_wr_ready || flash_rd_ready;
     assign flash_wr = slv_sel && slv_we && ~slv_penable;
     assign flash_rd = slv_sel && (!slv_we) && slv_penable;
 

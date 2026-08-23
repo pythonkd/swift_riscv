@@ -81,33 +81,25 @@ typedef struct
 
 void sim_send_msg(uint32_t msg) { SWIFT_RV_SIM_UART->COMMAND = msg; }
 
-volatile void uart_putc(uint32_t c) { SWIFT_RV_SIM_UART->DISPLAY = c; }
+void uart_putc(uint32_t c) { SWIFT_RV_SIM_UART->DISPLAY = c; }
 
 volatile void demo_test(void)
 {
-	// char test_demo[] = "--------------test_demo-----------------\n";
-	// int i = 0;
+	int test_demo[8];
+	int i = 0;
 
-	// for (i = 0; i < sizeof(test_demo) - 1; i++)
-	// {
-	// 	uart_putc(test_demo[i]);
-	// }
-	uart_putc('A');
-	uart_putc('B');
-	uart_putc('C');
-	uart_putc('A');
-	uart_putc('B');
-	uart_putc('C');
-	uart_putc('A');
-	uart_putc('B');
-	uart_putc('C');
-	uart_putc('A');
-	uart_putc('B');
-	uart_putc('C');
-	uart_putc('A');
-	uart_putc('B');
-	uart_putc('C');
-	uart_putc('\n');
+	test_demo[0] = 'A';
+	test_demo[1] = 'B';
+	test_demo[2] = 'C';
+	test_demo[3] = 'D';
+	test_demo[4] = 'E';
+	test_demo[5] = 'F';
+	test_demo[6] = 'G';
+	test_demo[7] = '\n';
+	for (i = 0; i < (sizeof(test_demo) / sizeof(int)); i++)
+	{
+		uart_putc(test_demo[i]);
+	}
 
 	return;
 	// printf("====>%s<=======\n", test_demo);

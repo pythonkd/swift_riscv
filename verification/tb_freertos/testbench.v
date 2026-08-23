@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:09:51
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-19 22:33:53
+ * @LastEditTime: 2026-08-23 22:35:41
  * @FilePath: /swift_riscv/verification/tb_freertos/testbench.v
  * @Description: 
  * 
@@ -61,19 +61,19 @@ localparam TEST_PASS = 32'habcd0000;
 localparam TEST_FAIL = 32'habcd0001;
 localparam TEST_END_ADDR = 8'h0;
 localparam TEST_PRT_ADDR = 8'h4;
-`define SW_TEST_CLOCK u_soc_top.u_crg.uart_clk
+`define SW_TEST_CLOCK u_soc_top.u_crg.core_clk
 logic  [7:0]sw_test_prt;
 logic sw_test_flag;
 logic sw_test_prt_flag;
-logic sw_sel;
-assign sw_sel = u_soc_top.u_uart.uart_wr;
+logic sw_wr_ready;
+assign sw_wr_ready = u_soc_top.u_uart.uart_wr_ready;
 assign sw_test_flag = u_soc_top.u_uart.uart_run_ret[`REG_WIDTH-1:0];
-assign sw_test_prt_flag = sw_sel && (u_soc_top.u_uart.addr[7:0] == TEST_PRT_ADDR);
+assign sw_test_prt_flag = sw_wr_ready && (u_soc_top.u_uart.addr[7:0] == TEST_PRT_ADDR);
 assign sw_test_prt = u_soc_top.u_uart.uart_tx[7:0];
 
 always @(posedge `SW_TEST_CLOCK)
-    if(sw_test_prt_flag && (sw_test_prt > 32'h5) && (sw_test_prt < 32'h7f)) begin
-        $write("%c", sw_test_prt[7:0]);
+    if(sw_test_prt_flag && (sw_test_prt > 8'h5) && (sw_test_prt < 8'h7f)) begin
+        $write("%c", sw_test_prt);
         $fflush();
     end
 

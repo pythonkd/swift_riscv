@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-08 10:59:04
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-18 22:56:10
+ * @LastEditTime: 2026-08-23 22:00:01
  * @FilePath: /swift_riscv/rtl/core/cpu_to_bus.v
  * @Description: 
  * 
@@ -17,6 +17,7 @@ module cpu_to_bus(
     input cpu_we,
     input [`BUS_ADDR_DATA_WIDTH - 1: 0]slv_rd_data,
     input slv_ready,
+    input cpu_flush_bus,
     output reg p_enable,
     output mst_we,
     output [`BUS_ADDR_WIDTH -1 : 0]mst_addr,
@@ -32,7 +33,7 @@ module cpu_to_bus(
     assign extern_data_ready = (slv_ready && p_enable) ? 1 : 0;
 
     always@(posedge clk or negedge rst_n)
-        if (!rst_n) begin
+        if (!rst_n || (cpu_flush_bus && (!mst_we))) begin
             state <= `BUS_STATE_IDLE;
             p_enable <= 1'b0;
         end
