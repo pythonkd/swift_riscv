@@ -14,14 +14,15 @@ ASM_SRCS := ../Source/portable/RISC-V/portASM.S
 INCLUDES += -I. -I../Source/portable/RISC-V -I../Source/include -I../../
 
 CFLAGS += -fno-strict-aliasing -fno-builtin-printf -fno-builtin-sprintf \
-	-fno-builtin-snprintf -fno-builtin-vsnprintf -fno-builtin-vprintf
+	-fno-builtin-snprintf -fno-builtin-vsnprintf -fno-builtin-vprintf -nostdlib
 C_SRCS := \
-	main.c \
 	../Source/list.c \
 	../Source/tasks.c \
 	../Source/queue.c \
 	../Source/portable/MemMang/heap_1.c \
 	../Source/portable/RISC-V/port.c \
+	../lib/printf.c \
+	main.c \
 
 
 COMMON_DIR = ../..
