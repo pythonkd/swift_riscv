@@ -11,7 +11,7 @@ TARGET = freertos
 CFLAGS += -Os 
 ASM_SRCS := ../Source/portable/RISC-V/portASM.S
 #LDFLAGS +=
-INCLUDES += -I. -I../Source/portable/RISC-V -I../Source/include -I../../
+INCLUDES += -I. -I../Source/portable/RISC-V -I../Source/include -I../../ -I../lib
 
 CFLAGS += -fno-strict-aliasing -fno-builtin-printf -fno-builtin-sprintf \
 	-fno-builtin-snprintf -fno-builtin-vsnprintf -fno-builtin-vprintf -nostdlib

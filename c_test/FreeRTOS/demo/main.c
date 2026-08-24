@@ -51,7 +51,7 @@
 /* FreeRTOS kernel includes. */
 #include <FreeRTOS.h>
 #include <task.h>
-
+#include "printf.h"
 /*-----------------------------------------------------------*/
 
 /*
@@ -62,7 +62,7 @@ void vApplicationMallocFailedHook(void);
 void vApplicationIdleHook(void);
 void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName);
 void vApplicationTickHook(void);
-
+extern void uart_putc(uint32_t c);
 void vApplicationTickHook(void)
 {
 }
@@ -74,7 +74,7 @@ void vApplicationTickHook(void)
 
 volatile void demo_test(void)
 {
-	int test_demo[8];
+	char test_demo[8];
 	int i = 0;
 
 	test_demo[0] = 'A';
@@ -85,11 +85,11 @@ volatile void demo_test(void)
 	test_demo[5] = 'F';
 	test_demo[6] = 'G';
 	test_demo[7] = '\n';
-	for (i = 0; i < (sizeof(test_demo) / sizeof(int)); i++)
+	for (i = 0; i < (sizeof(test_demo) / sizeof(test_demo[0])); i++)
 	{
-		uart_putc(test_demo[i]);
+		uart_putc((uint32_t)test_demo[i]);
 	}
-	printf("====>%s<=======\n", test_demo);
+	// printf("====>%s<=======\n", test_demo);
 	return;
 
 	// printf("%s\n", test_demo);

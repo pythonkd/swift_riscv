@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:09:51
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-23 22:35:41
+ * @LastEditTime: 2026-08-24 21:53:01
  * @FilePath: /swift_riscv/verification/tb_freertos/testbench.v
  * @Description: 
  * 
@@ -53,7 +53,7 @@ wire [`REG_WIDTH-1:0] t6_x31   = u_soc_top.u_core_top. u_reg_file. reg_f[31];
 integer r;
 
 initial begin
-    #(`SIM_PERIOD * 300000);
+    #(`SIM_PERIOD * 800000);
     $display("Time Out");
     $finish;
 end
@@ -100,13 +100,19 @@ initial begin
     clk = 1'b0;
     reset;
     inst_load();
-    #(`SIM_PERIOD * 7000);
-    $display("=================>Time Out<=================");
+    time_out;
     $fsdbDumpflush();  // 强制刷新波形缓存
     $finish;  
 end
 
 always #(`SIM_PERIOD/2) clk = ~clk;
+
+task time_out;
+    begin
+        #(`SIM_PERIOD * 20_000);
+        $display("=================>Time Out<=================");
+    end
+endtask
 
 task reset;                // reset 1 clock
     begin
