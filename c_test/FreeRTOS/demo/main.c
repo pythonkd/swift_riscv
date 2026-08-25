@@ -51,7 +51,7 @@
 /* FreeRTOS kernel includes. */
 #include <FreeRTOS.h>
 #include <task.h>
-#include "printf.h"
+#include "xprintf.h"
 /*-----------------------------------------------------------*/
 
 /*
@@ -76,7 +76,7 @@ volatile void demo_test(void)
 {
 	char test_demo[8];
 	int i = 0;
-
+	xprintf_init();
 	test_demo[0] = 'A';
 	test_demo[1] = 'B';
 	test_demo[2] = 'C';
@@ -87,12 +87,12 @@ volatile void demo_test(void)
 	test_demo[7] = '\n';
 	for (i = 0; i < (sizeof(test_demo) / sizeof(test_demo[0])); i++)
 	{
-		uart_putc((uint32_t)test_demo[i]);
+		uart_putc(test_demo[i]);
 	}
-	// printf("====>%s<=======\n", test_demo);
+	xprintf("--------->%s<---------\n", test_demo);
+	xprintf("--------->%d<---------\n", i);
+	xprintf("%s\n", test_demo);
 	return;
-
-	// printf("%s\n", test_demo);
 }
 
 int main(void)

@@ -128,11 +128,7 @@ void sim_send_msg(uint32_t msg) { SWIFT_RV_SIM_UART->COMMAND = msg; }
 void uart_putc(uint32_t c) { SWIFT_RV_SIM_UART->DISPLAY = c; }
 void _putchar(char character)
 {
-  uart_putc((uint32_t)character);
-  if (character == '\n')
-  {
-    uart_putc('\r');
-  }
+  uart_putc(character);
 }
 
 // output function type

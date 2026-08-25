@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-23 22:00:28
+ * @LastEditTime: 2026-08-25 21:39:38
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -109,7 +109,7 @@ module core_top (
     wire [`REG_WIDTH - 1: 0]clint_to_cpu_data;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_data;
-    wire [`STRB_WIDTH - 1: 0]mem_strb,
+    wire [`STRB_WIDTH - 1: 0]mem_strb;
     wire [`STRB_WIDTH - 1: 0]cpu_to_dlm_strb;
     wire extern_data_ready;
     wire bus_stall_if;

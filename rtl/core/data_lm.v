@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 17:45:31
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-24 22:38:44
+ * @LastEditTime: 2026-08-25 21:40:03
  * @FilePath: /swift_riscv/rtl/core/data_lm.v
  * @Description: 
  * 
@@ -28,7 +28,7 @@ module d_lm(
    wire [7:0]byte2;
    wire [7:0]byte3;
 
-   assign addr_offset = addr[1:0];
+   assign addr_offset = mem_addr[1:0];
    always @(posedge clk or negedge rst_n)
       if (!rst_n)
          data_err <= 0;
@@ -51,22 +51,22 @@ module d_lm(
       else begin
          case(addr_offset)
             2'b00: begin
-               rdata_out[7:0]   = mem_strb[0] ? byte0 : 8'h00;
-               rdata_out[15:8]  = mem_strb[1] ? byte1 : 8'h00;
-               rdata_out[23:16] = mem_strb[2] ? byte2 : 8'h00;
-               rdata_out[31:24] = mem_strb[3] ? byte3 : 8'h00;
+               mem_rd_data[7:0]   = mem_strb[0] ? byte0 : 8'h00;
+               mem_rd_data[15:8]  = mem_strb[1] ? byte1 : 8'h00;
+               mem_rd_data[23:16] = mem_strb[2] ? byte2 : 8'h00;
+               mem_rd_data[31:24] = mem_strb[3] ? byte3 : 8'h00;
             end
             2'b01: begin
-               rdata_out[7:0]   = mem_strb[0] ? byte1 : 8'h00;
-               rdata_out[15:8]  = mem_strb[1] ? byte2 : 8'h00;
-               rdata_out[23:16] = mem_strb[2] ? byte3 : 8'h00;
+               mem_rd_data[7:0]   = mem_strb[0] ? byte1 : 8'h00;
+               mem_rd_data[15:8]  = mem_strb[1] ? byte2 : 8'h00;
+               mem_rd_data[23:16] = mem_strb[2] ? byte3 : 8'h00;
             end
             2'b10: begin // access byte2, shift left 2 bytes
-               rdata_out[7:0]   = mem_strb[0] ? byte2 : 8'h00;
-               rdata_out[15:8]  = mem_strb[1] ? byte3 : 8'h00;
+               mem_rd_data[7:0]   = mem_strb[0] ? byte2 : 8'h00;
+               mem_rd_data[15:8]  = mem_strb[1] ? byte3 : 8'h00;
             end
             2'b11: begin
-                  rdata_out[7:0]   = mem_strb[0] ? byte3 : 8'h00;
+                  mem_rd_data[7:0]   = mem_strb[0] ? byte3 : 8'h00;
             end
          endcase
       end

@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-08 11:36:08
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-20 23:04:24
+ * @LastEditTime: 2026-08-25 21:48:33
  * @FilePath: /swift_riscv/rtl/core/addr_mux.v
  * @Description: 
  * 
@@ -54,7 +54,7 @@ module addr_mux(
 
     assign mem_need_external = (mem_addr >= `CLINT_END_ADDR);
     assign if_need_external  = (instruction_addr >= `ILM_END_ADDR);
-    assign external_grant_mem = mem_need_external && mem_req_valid && if_need_external ? 1'b1: 1'b0;
+    assign external_grant_mem = mem_need_external && mem_req_valid ? 1'b1: 1'b0;
 
     assign bus_stall_cpu = (if_need_external && ~extern_data_ready);
     assign bus_stall_if = mem_need_external;

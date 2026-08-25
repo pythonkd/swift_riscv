@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 21:48:55
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-09 09:38:22
+ * @LastEditTime: 2026-08-25 23:04:46
  * @FilePath: /swift_riscv/rtl/core/reg_file.v
  * @Description: 
  * 
@@ -23,7 +23,13 @@ module reg_file(
     reg [`REG_WIDTH-1:0] reg_f [0:`REG_DATA_DEPTH-1];
 
     always @(posedge clk or negedge rst_n)
-        if (rst_n && (reg_we) && (rd_index != `INST_RD_WIDTH'b0))
+        if (!rst_n) begin : reg_f_reset_blk
+            integer i;
+            for(i = 0; i < `REG_DATA_DEPTH; i = i + 1) begin
+                reg_f[i] <= {`REG_WIDTH{1'b0}};
+            end
+        end
+        else if (rst_n && (reg_we) && (rd_index != `INST_RD_WIDTH'b0))
             reg_f[rd_index] <= rd_data;
     
     always @(*)
