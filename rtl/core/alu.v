@@ -33,6 +33,7 @@ module alu(
     output reg [`REG_WIDTH - 1: 0] rd_data,
     output reg [`REG_WIDTH - 1:0] mem_wr_data,
     output reg [`REG_WIDTH - 1:0] mem_addr,
+    output reg [`STRB_WIDTH - 1: 0] mem_strb,
     output reg mem_req_valid,
     output reg [`REG_WIDTH - 1:0] csr_wr_data,
     output reg [`INST_CSR_WIDTH - 1:0] csr_wr_addr,
@@ -112,7 +113,7 @@ module alu(
         mem_addr       = {`REG_WIDTH{1'b0}};
         csr_wr_data    = {`REG_WIDTH{1'b0}};
         csr_wr_addr    = {`INST_CSR_WIDTH{1'b0}};
-
+        mem_strb = `STRB_WIDTH'b1111;
         // ---------- 根据 opcode 译码 ----------
         case (opcode)
 
@@ -203,6 +204,13 @@ module alu(
                 imm = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
                 mem_addr = rs1_data + imm;
                 mem_req_valid = 1'b1;
+                 case (func3)
+                    `INST_OPCODE_IL_LB:  mem_strb = `STRB_WIDTH'b0001;
+                    `INST_OPCODE_IL_LH:  mem_strb = `STRB_WIDTH'b0011;
+                    `INST_OPCODE_IL_LW:  mem_strb = `STRB_WIDTH'b1111;
+                    `INST_OPCODE_IL_LBU: mem_strb = `STRB_WIDTH'b0001;
+                    `INST_OPCODE_IL_LHU: mem_strb = `STRB_WIDTH'b0011;
+                endcase
                 if (mem_rd_valid) begin
                     case (func3)
                         `INST_OPCODE_IL_LB:  rd_data = {{(`REG_WIDTH - 8){mem_rd_data[7]}}, mem_rd_data[7:0]};

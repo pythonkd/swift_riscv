@@ -13,6 +13,7 @@ module addr_mux(
     input extern_data_ready,
     input [`REG_WIDTH - 1: 0]instruction_addr,
     input mem_req_valid,
+    input [`STRB_WIDTH - 1: 0]mem_strb,
     input [`REG_WIDTH - 1: 0]mem_addr,
     input [`REG_WIDTH - 1: 0]mem_wr_data,
     input [`REG_WIDTH - 1:0]external_to_cpu_rd_data,
@@ -37,6 +38,7 @@ module addr_mux(
     output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_mem_addr,
     output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_wr_addr,
     output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_data,
+    output reg [`STRB_WIDTH - 1: 0]cpu_to_dlm_strb,
     output reg [`REG_WIDTH - 1: 0]cpu_to_dlm_addr,
     output reg [`REG_WIDTH - 1: 0]cpu_to_dlm_data,
     output reg [`REG_WIDTH - 1: 0]cpu_to_external_addr,
@@ -48,38 +50,41 @@ module addr_mux(
 );
     wire mem_need_external;
     wire if_need_external;
-    reg  external_grant_mem;
+    wire external_grant_mem;
 
     assign mem_need_external = (mem_addr >= `CLINT_END_ADDR);
     assign if_need_external  = (instruction_addr >= `ILM_END_ADDR);
+    assign external_grant_mem = mem_need_external && mem_req_valid && if_need_external ? 1'b1: 1'b0;
 
     assign bus_stall_cpu = (if_need_external && ~extern_data_ready);
     assign bus_stall_if = mem_need_external;
     assign instruction_valid = if_need_external ? extern_data_ready: 1'b1;
     assign mem_rd_valid = mem_need_external && (~data_we) ? extern_data_ready: 1'b1;
+
     always @(*) begin
-        if(mem_need_external) begin
-            external_grant_mem = 1'b1;
+        cpu_wr_external_en = 0;
+        cpu_to_external_addr = {`REG_WIDTH{1'b0}};
+        cpu_to_external_data = {`REG_WIDTH{1'b0}};
+        if (external_grant_mem) begin
+            mem_rd_data = external_to_cpu_rd_data;
+            cpu_to_external_addr = mem_addr;
+            cpu_wr_external_en = data_we;
+            cpu_to_external_data = mem_wr_data;
+        end else if(if_need_external) begin
+            instruction = external_to_cpu_rd_data;
+            cpu_to_external_addr = instruction_addr;
+            cpu_wr_external_en   = 1'b0;
         end else begin
-            external_grant_mem = 1'b0;
+            cpu_to_ilm_rd_inst_addr = instruction_addr;
+            instruction = ilm_to_cpu_inst_data;
         end
     end
-
-    always @(*)
-        if (instruction_addr < `ILM_END_ADDR) begin
-            cpu_to_ilm_rd_inst_addr = instruction_addr;
-            cpu_to_external_addr = 0;
-            instruction = ilm_to_cpu_inst_data;
-        end else begin
-            if (~external_grant_mem)
-                instruction = external_to_cpu_rd_data;
-        end
 
     always @(*) begin
         cpu_wr_ilm_en = 0;
         cpu_wr_dlm_en = 0;
-        cpu_wr_external_en = 0;
-        if (mem_req_valid) begin
+        cpu_to_dlm_strb = `STRB_WIDTH'b1111;
+        if (mem_req_valid && (~mem_need_external)) begin
             if (mem_addr < `ILM_END_ADDR) begin
                 if (data_we)
                     cpu_to_ilm_wr_addr = mem_addr - `ILM_ADDR_BASE;
@@ -93,6 +98,7 @@ module addr_mux(
                 cpu_wr_dlm_en = data_we;
                 cpu_to_dlm_data = mem_wr_data;
                 mem_rd_data = dlm_to_cpu_data;
+                cpu_to_dlm_strb = mem_strb;
             end else if(mem_addr < `MTIMER_END_ADDR) begin
                 cpu_to_mtimer_addr = mem_addr;
                 cpu_wr_mtimer_en = data_we;
@@ -103,29 +109,7 @@ module addr_mux(
                 cpu_wr_clint_en = data_we;
                 cpu_to_clint_data = mem_wr_data;
                 mem_rd_data = clint_to_cpu_data;
-            end else begin
-                if (external_grant_mem) begin
-                    mem_rd_data = external_to_cpu_rd_data;
-                end
-                cpu_to_external_addr = mem_addr;
-                cpu_wr_external_en = data_we;
-                cpu_to_external_data = mem_wr_data;
             end
-        end
-    end
-
-    always @(*) begin
-        cpu_to_external_addr = {`REG_WIDTH{1'b0}};
-        cpu_to_external_data = {`REG_WIDTH{1'b0}};
-        cpu_wr_external_en   = 1'b0;
-        if(external_grant_mem) begin
-            cpu_to_external_addr = mem_addr;
-            cpu_to_external_data = mem_wr_data;
-            cpu_wr_external_en   = data_we;
-        end 
-        else if(if_need_external) begin
-            cpu_to_external_addr = instruction_addr;
-            cpu_wr_external_en   = 1'b0;
         end
     end
 

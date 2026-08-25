@@ -109,6 +109,8 @@ module core_top (
     wire [`REG_WIDTH - 1: 0]clint_to_cpu_data;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_addr;
     wire [`REG_WIDTH - 1: 0]cpu_to_clint_data;
+    wire [`STRB_WIDTH - 1: 0]mem_strb,
+    wire [`STRB_WIDTH - 1: 0]cpu_to_dlm_strb;
     wire extern_data_ready;
     wire bus_stall_if;
     wire bus_stall_cpu;
@@ -173,6 +175,7 @@ module core_top (
         //input
         .clk(clk),
         .rst_n(rst_n),
+        .mem_strb(cpu_to_dlm_strb),
         .mem_addr(cpu_to_dlm_addr_pipe2),
         .mem_wr_data(cpu_to_dlm_data_pipep2),
         .mem_we(cpu_wr_dlm_en_pipe2),
@@ -275,6 +278,7 @@ module core_top (
         .rd_data(rd_data_pipe2),
         .mem_wr_data(mem_wr_data_pipe2),
         .mem_addr(mem_addr_pipe2),
+        .mem_strb(mem_strb),
         .mem_req_valid(mem_req_valid),
         .csr_wr_data(csr_wr_data_pipe2),
         .csr_wr_addr(csr_wr_addr_pipe2),
@@ -335,6 +339,7 @@ module core_top (
         // input
         .instruction_addr(cur_pc_pipe0),
         .mem_req_valid(mem_req_valid),
+        .mem_strb(mem_strb),
         .mem_addr(mem_addr_pipe2),
         .mem_wr_data(mem_wr_data_pipe2),
         .external_to_cpu_rd_data(external_to_cpu_rd_data),
@@ -361,6 +366,7 @@ module core_top (
         .cpu_to_ilm_rd_mem_addr(cpu_to_ilm_rd_mem_addr),
         .cpu_to_ilm_wr_addr(cpu_to_ilm_wr_addr_pipe2),
         .cpu_to_ilm_data(cpu_to_ilm_data_pipe2),
+        .cpu_to_dlm_strb(cpu_to_dlm_strb),
         .cpu_to_dlm_addr(cpu_to_dlm_addr_pipe2),
         .cpu_to_dlm_data(cpu_to_dlm_data_pipep2),
         .cpu_to_external_addr(cpu_to_external_addr),
