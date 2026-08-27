@@ -67,6 +67,7 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName);
 void vApplicationTickHook(void);
 extern void uart_putc(uint32_t c);
 extern void sim_send_msg(uint32_t c);
+extern int coremark_main(void);
 void vApplicationTickHook(void)
 {
 }
@@ -118,6 +119,7 @@ volatile void demo_test(void)
 int main(void)
 {
 	demo_test();
+	coremark_main();
 	// xTaskCreate(demo_test,				  /* The function that implements the task. */
 	// 			"demo",					  /* The text name assigned to the task - for debug only as it is not used by the kernel. */
 	// 			configMINIMAL_STACK_SIZE, /* The size of the stack to allocate to the task. */

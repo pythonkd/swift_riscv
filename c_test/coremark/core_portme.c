@@ -3,7 +3,6 @@
 
 #include "config.h"
 #include "coremark.h"
-#include "platform.h"
 // #include "encoding.h"
 
 #if VALIDATION_RUN
@@ -32,22 +31,27 @@ static CORE_TICKS t0, t1;
 extern uint64_t get_timer_value();
 
 #ifdef CFG_DEBUG
-unsigned long long rdmcycle(void) {
+unsigned long long rdmcycle(void)
+{
 #if __riscv_xlen == 32
-    do {
+    do
+    {
         unsigned long hi = read_csr(mcycleh);
         unsigned long lo = read_csr(mcycle);
 
-        if (hi == read_csr(mcycleh)) return ((unsigned long long)hi << 32) | lo;
+        if (hi == read_csr(mcycleh))
+            return ((unsigned long long)hi << 32) | lo;
     } while (1);
 #else
     return (unsigned long long)read_csr(mcycle);
 #endif
 }
 
-unsigned long long rdminstret(void) {
+unsigned long long rdminstret(void)
+{
 #if __riscv_xlen == 32
-    do {
+    do
+    {
         unsigned long hi = read_csr(CSR_MINSTRETH);
         unsigned long lo = read_csr(CSR_MINSTRET);
 
@@ -61,7 +65,8 @@ unsigned long long rdminstret(void) {
 
 #endif
 
-void start_time(void) {
+void start_time(void)
+{
 #ifdef CFG_MTIME
     printf("\nThe time is from mtime\n");
 #else
@@ -77,7 +82,8 @@ void start_time(void) {
 #endif
 }
 
-void stop_time(void) {
+void stop_time(void)
+{
     t1 = get_timer_value();
 
 #ifdef CFG_DEBUG
@@ -90,7 +96,8 @@ void stop_time(void) {
 
 CORE_TICKS get_time(void) { return (CORE_TICKS)t1 - t0; }
 
-secs_ret time_in_secs(CORE_TICKS ticks) {
+secs_ret time_in_secs(CORE_TICKS ticks)
+{
     extern unsigned int get_timer_freq();
 
     secs_ret delta = (secs_ret)ticks;

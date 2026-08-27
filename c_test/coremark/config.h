@@ -1,4 +1,14 @@
 /*
+ * @Author: pythonkd 1181878670@qq.com
+ * @Date: 2026-08-24 22:53:03
+ * @LastEditors: pythonkd 1181878670@qq.com
+ * @LastEditTime: 2026-08-27 22:40:52
+ * @FilePath: /swift_riscv/c_test/coremark/config.h
+ * @Description:
+ *
+ * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved.
+ */
+/*
  * Copyright (c) 2012-2021 Andes Technology Corporation
  * All rights reserved.
  *
@@ -6,8 +16,7 @@
 
 #ifndef __CONFIG_H__
 #define __CONFIG_H__
-
-#include "platform.h"
+#include "swift_config.h"
 
 #define CPU_MHz (CPUFREQ / MHz)
 
@@ -26,10 +35,7 @@
 
 // It's suggested to set ITERATIONS as 7000 to run benchmark on real board
 // To speed up CoreMark simulation, the ITERATIONS could be set as 350
-#ifndef CFG_SIMU
-#define ITERATIONS 7000
-#else
-#define ITERATIONS 350
-#endif
 
-#endif  // __CONFIG_H__
+#define ITERATIONS 5
+
+#endif // __CONFIG_H__

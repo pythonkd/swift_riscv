@@ -36,12 +36,12 @@ Original Author: Shay Gal-on
 #define MEM_STACK 2
 
 #include "core_portme.h"
-
+#include "xprintf.h"
 #if HAS_STDIO
 #include <stdio.h>
 #endif
 #if HAS_PRINTF
-#define ee_printf printf
+#define ee_printf xprintf
 #endif
 
 /* Actual benchmark execution in iterate */
@@ -88,12 +88,14 @@ ee_s32 parseval(char *valstring);
 #define NUM_ALGORITHMS 3
 
 /* list data structures */
-typedef struct list_data_s {
+typedef struct list_data_s
+{
     ee_s16 data16;
     ee_s16 idx;
 } list_data;
 
-typedef struct list_head_s {
+typedef struct list_head_s
+{
     struct list_head_s *next;
     struct list_data_s *info;
 } list_head;
@@ -108,7 +110,8 @@ typedef ee_f16 MATDAT;
 typedef ee_f32 MATRES;
 #endif
 
-typedef struct MAT_PARAMS_S {
+typedef struct MAT_PARAMS_S
+{
     int N;
     MATDAT *A;
     MATDAT *B;
@@ -117,7 +120,8 @@ typedef struct MAT_PARAMS_S {
 
 /* state machine related stuff */
 /* List of all the possible states for the FSM */
-typedef enum CORE_STATE {
+typedef enum CORE_STATE
+{
     CORE_START = 0,
     CORE_INVALID,
     CORE_S1,
@@ -130,7 +134,8 @@ typedef enum CORE_STATE {
 } core_state_e;
 
 /* Helper structure to hold results */
-typedef struct RESULTS_S {
+typedef struct RESULTS_S
+{
     /* inputs */
     ee_s16 seed1;      /* Initializing seed */
     ee_s16 seed2;      /* Initializing seed */

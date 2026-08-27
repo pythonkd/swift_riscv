@@ -15,6 +15,9 @@ INCLUDES += -I. -I../Source/portable/RISC-V -I../Source/include -I../../ -I../li
 
 CFLAGS += -fno-strict-aliasing -fno-builtin-printf -fno-builtin-sprintf \
 	-fno-builtin-snprintf -fno-builtin-vsnprintf -fno-builtin-vprintf
+# coremark
+CFLAGS += -DFLAGS_STR='"RISC-V GCC -O2 -march=rv32imc -nostdlib"'
+
 C_SRCS := \
 	../Source/list.c \
 	../Source/tasks.c \
@@ -24,7 +27,7 @@ C_SRCS := \
 	../lib/xprintf.c \
 	main.c \
 
-
+BSP_SRCS = 
 COMMON_DIR = ../..
 TOOLCHAIN_DIR = ../../../
 include ../../common.mk

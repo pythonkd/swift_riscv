@@ -1,4 +1,6 @@
 
+include ../../coremark/coremark.mk
+
 RISCV_PATH := $(TOOLCHAIN_DIR)/tools/riscv64-unknown-elf-gcc-8.3.0-2020.04.0-x86_64-linux-ubuntu14/
 
 RISCV_GCC     := $(abspath $(RISCV_PATH)/bin/riscv64-unknown-elf-gcc)
