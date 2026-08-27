@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:09:51
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-24 21:53:01
+ * @LastEditTime: 2026-08-27 22:25:53
  * @FilePath: /swift_riscv/verification/tb_freertos/testbench.v
  * @Description: 
  * 
@@ -52,18 +52,14 @@ wire [`REG_WIDTH-1:0] t6_x31   = u_soc_top.u_core_top. u_reg_file. reg_f[31];
 
 integer r;
 
-initial begin
-    #(`SIM_PERIOD * 800000);
-    $display("Time Out");
-    $finish;
-end
+
 localparam TEST_PASS = 32'habcd0000;
 localparam TEST_FAIL = 32'habcd0001;
 localparam TEST_END_ADDR = 8'h0;
 localparam TEST_PRT_ADDR = 8'h4;
 `define SW_TEST_CLOCK u_soc_top.u_crg.core_clk
 logic  [7:0]sw_test_prt;
-logic sw_test_flag;
+logic [`REG_WIDTH-1:0]sw_test_flag;
 logic sw_test_prt_flag;
 logic sw_wr_ready;
 assign sw_wr_ready = u_soc_top.u_uart.uart_wr_ready;
@@ -109,7 +105,7 @@ always #(`SIM_PERIOD/2) clk = ~clk;
 
 task time_out;
     begin
-        #(`SIM_PERIOD * 20_000);
+        #(`SIM_PERIOD * 20000_000);
         $display("=================>Time Out<=================");
     end
 endtask

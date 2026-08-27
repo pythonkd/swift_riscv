@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-20 22:01:27
+ * @LastEditTime: 2026-08-26 23:08:00
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 统一译码的 ALU 模块
  * 
@@ -231,10 +231,11 @@ module alu(
                 mem_req_valid = 1'b1;
                 imm = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RD_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rd};
                 mem_addr = rs1_data + imm;
+                mem_wr_data = rs2_data;
                 case (func3)
-                    `INST_OPCODE_S_SB: mem_wr_data = {mem_rd_data[`REG_WIDTH-1:8], rs2_data[7:0]};
-                    `INST_OPCODE_S_SH: mem_wr_data = {mem_rd_data[`REG_WIDTH-1:16], rs2_data[15:0]};
-                    `INST_OPCODE_S_SW: mem_wr_data = rs2_data[31:0];
+                    `INST_OPCODE_S_SB: mem_strb = `STRB_WIDTH'b0001;
+                    `INST_OPCODE_S_SH: mem_strb = `STRB_WIDTH'b0011;
+                    `INST_OPCODE_S_SW: mem_strb = `STRB_WIDTH'b1111;
                     default: ;
                 endcase
             end

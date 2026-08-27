@@ -14,39 +14,39 @@ _start:
 	csrw mtvec, t0
 	/* Load data section */
 	la a0, _data_lma
-	la a1, _data
-	la a2, _edata
-	bgeu a1, a2, 2f
-1:
+	la a1, __data_vma_start
+	la a2, __data_vma_end
+	bgeu a1, a2, copy_data_done
+copy_data:
 	lw t0, (a0)
 	sw t0, (a1)
 	addi a0, a0, 4
 	addi a1, a1, 4
-	bltu a1, a2, 1b
-2:
+	bltu a1, a2, copy_data
+copy_data_done:
 
 	/* Load instruction section */
 	la a0, __tcm_code_lma_start
 	la a1, __tcm_code_vma_start
 	la a2, __tcm_code_vma_end
-	bgeu a1, a2, 2f
-1:
+	bgeu a1, a2, copy_text_done
+copy_text:
 	lw t0, (a0)
 	sw t0, (a1)
 	addi a0, a0, 4
 	addi a1, a1, 4
-	bltu a1, a2, 1b
-2:
+	bltu a1, a2, copy_text
+copy_text_done:
 
 	/* Clear bss section */
 	la a0, __bss_start
-	la a1, _end
-	bgeu a0, a1, 2f
-1:
+	la a1, __bss_end
+	bgeu a0, a1, clear_bss_done
+clear_bss:
 	sw zero, (a0)
 	addi a0, a0, 4
-	bltu a0, a1, 1b
-2:
+	bltu a0, a1, clear_bss
+clear_bss_done:
 
     call main
 

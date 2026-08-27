@@ -52,6 +52,9 @@
 #include <FreeRTOS.h>
 #include <task.h>
 #include "xprintf.h"
+
+#define UART_TEST_PASS 0xABCD0000
+#define UART_TEST_FAIL 0xABCD0001
 /*-----------------------------------------------------------*/
 
 /*
@@ -63,6 +66,7 @@ void vApplicationIdleHook(void);
 void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName);
 void vApplicationTickHook(void);
 extern void uart_putc(uint32_t c);
+extern void sim_send_msg(uint32_t c);
 void vApplicationTickHook(void)
 {
 }
@@ -71,27 +75,43 @@ void vApplicationTickHook(void)
  */
 
 /*-----------------------------------------------------------*/
+void print_swift_rv_logo(void)
+{
+	xprintf("\n");
+	xprintf("##############################################\n");
+	xprintf("#                                            #\n");
+	xprintf("#   SSSSS  W     W  IIII  FFFFF  TTTTT       #\n");
+	xprintf("#   S      W     W   I    F        T         #\n");
+	xprintf("#   SSS    W  W  W   I    FFFF     T         #\n");
+	xprintf("#       S  W W W W   I    F        T         #\n");
+	xprintf("#   SSSS    W   W   IIII  F        T         #\n");
+	xprintf("#                                            #\n");
+	xprintf("#        RRRRR  V       V                    #\n");
+	xprintf("#        R   R   V     V                     #\n");
+	xprintf("#        RRRR     V   V                      #\n");
+	xprintf("#        R  R      V V                       #\n");
+	xprintf("#        R   R      V                        #\n");
+	xprintf("#                                            #\n");
+	xprintf("#       RISC-V  Core  Simulation             #\n");
+	xprintf("#       FreeRTOS  Running ...                #\n");
+	xprintf("##############################################\n");
+	xprintf("\n");
+}
+
+void __exit__(uint8_t ret)
+{
+	if (ret)
+		sim_send_msg(UART_TEST_FAIL);
+	else
+		sim_send_msg(UART_TEST_PASS);
+}
 
 volatile void demo_test(void)
 {
-	char test_demo[8];
-	int i = 0;
+	uint8_t ret = 0;
 	xprintf_init();
-	test_demo[0] = 'A';
-	test_demo[1] = 'B';
-	test_demo[2] = 'C';
-	test_demo[3] = 'D';
-	test_demo[4] = 'E';
-	test_demo[5] = 'F';
-	test_demo[6] = 'G';
-	test_demo[7] = '\n';
-	for (i = 0; i < (sizeof(test_demo) / sizeof(test_demo[0])); i++)
-	{
-		uart_putc(test_demo[i]);
-	}
-	xprintf("--------->%s<---------\n", test_demo);
-	xprintf("--------->%d<---------\n", i);
-	xprintf("%s\n", test_demo);
+	print_swift_rv_logo();
+	__exit__(ret);
 	return;
 }
 

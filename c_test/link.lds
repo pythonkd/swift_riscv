@@ -45,21 +45,11 @@ SECTIONS
   /****************************************************************************
    * data段：VMA=DCM，LMA=FLASH，由flash里的.init拷贝到DCM
    ***************************************************************************/
-  .lalign         :
-  {
-    . = ALIGN(4);
-    PROVIDE( _data_lma = LOADADDR(.data) );
-  } >DCM AT>FLASH
-
-  .dalign         :
+  .data          :
   {
     . = ALIGN(4);
     PROVIDE( _data = . );
-  } >DCM AT>FLASH
-
-  .data          :
-  {
-    . = ALIGN(32);
+    PROVIDE( _data_lma = LOADADDR(.data) );
     __data_vma_start = .;
     PROVIDE( __global_pointer$ = . + 0x800 );
     *(.rodata)
