@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-08 11:36:08
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-25 21:48:33
+ * @LastEditTime: 2026-08-27 22:57:14
  * @FilePath: /swift_riscv/rtl/core/addr_mux.v
  * @Description: 
  * 
@@ -100,12 +100,12 @@ module addr_mux(
                 mem_rd_data = dlm_to_cpu_data;
                 cpu_to_dlm_strb = mem_strb;
             end else if(mem_addr < `MTIMER_END_ADDR) begin
-                cpu_to_mtimer_addr = mem_addr;
+                cpu_to_mtimer_addr = mem_addr - `MTIMER_ADDR_BASE;
                 cpu_wr_mtimer_en = data_we;
                 cpu_to_mtimer_data = mem_wr_data;
                 mem_rd_data = mtimer_to_cpu_data;
             end else if(mem_addr < `CLINT_END_ADDR) begin
-                cpu_to_clint_addr = mem_addr;
+                cpu_to_clint_addr = mem_addr - `CLINT_ADDR_BASE;
                 cpu_wr_clint_en = data_we;
                 cpu_to_clint_data = mem_wr_data;
                 mem_rd_data = clint_to_cpu_data;
