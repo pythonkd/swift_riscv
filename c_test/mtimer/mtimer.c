@@ -8,7 +8,13 @@
  *
  * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved.
  */
+#include "swift_config.h"
+#include "mtimer.h"
 
-void mtimer_init(void)
-{
+static MTIMER_RegDef* mtimer_reg = (MTIMER_RegDef*)MTIMER_BASE_ADDR;
+
+uint64_t mtimer_get_cycle(void) { 
+    uint32_t hi = mtimer_reg->mtimer_cnt_hi;
+    uint32_t lo = mtimer_reg->mtimer_cnt_lo;
+    return ((uint64_t)hi << 32) | lo;
 }

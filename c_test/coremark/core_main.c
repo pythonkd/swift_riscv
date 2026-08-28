@@ -128,11 +128,11 @@ coremark_main(int argc, char *argv[])
 #if 0
     results[0].iterations = get_seed_32(4);
 #else
-    results[0].iterations = 500;
-#endif
-#if defined(CORE_DEBUG) || defined(CONFIG_SIMV)
     results[0].iterations = 1;
 #endif
+// #if defined(CORE_DEBUG)
+//     results[0].iterations = 1;
+// #endif
     results[0].execs = get_seed_32(5);
     if (results[0].execs == 0)
     { /* if not supplied, execute all algorithms */

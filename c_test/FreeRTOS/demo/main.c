@@ -51,8 +51,9 @@
 /* FreeRTOS kernel includes. */
 #include <FreeRTOS.h>
 #include <task.h>
+#include "csr.h"
 #include "xprintf.h"
-
+#include "swift_config.h"
 #define UART_TEST_PASS 0xABCD0000
 #define UART_TEST_FAIL 0xABCD0001
 /*-----------------------------------------------------------*/
@@ -99,6 +100,17 @@ void print_swift_rv_logo(void)
 	xprintf("\n");
 }
 
+unsigned int get_timer_freq(void) { return (unsigned int)CPUFREQ; }
+
+uint64_t get_timer_value(void) {
+    do {
+        unsigned long hi = read_csr(CSR_CYCLEH);
+        unsigned long lo = read_csr(CSR_CYCLE);
+
+        if (hi == read_csr(CSR_CYCLEH)) return ((uint64_t)hi << 32) | lo;
+    } while (1);
+}
+
 void __exit__(uint8_t ret)
 {
 	if (ret)
@@ -109,17 +121,17 @@ void __exit__(uint8_t ret)
 
 volatile void demo_test(void)
 {
-	uint8_t ret = 0;
 	xprintf_init();
 	print_swift_rv_logo();
-	__exit__(ret);
 	return;
 }
 
 int main(void)
 {
+	uint8_t ret = 0;
 	demo_test();
 	coremark_main();
+	
 	// xTaskCreate(demo_test,				  /* The function that implements the task. */
 	// 			"demo",					  /* The text name assigned to the task - for debug only as it is not used by the kernel. */
 	// 			configMINIMAL_STACK_SIZE, /* The size of the stack to allocate to the task. */
@@ -128,6 +140,7 @@ int main(void)
 	// 			NULL);					  /* The task handle is not required, so NULL is passed. */
 
 	// vTaskStartScheduler();
+	__exit__(ret);
 	for (;;)
 		;
 }

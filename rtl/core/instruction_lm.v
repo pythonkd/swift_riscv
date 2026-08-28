@@ -30,7 +30,7 @@
 
    always @(posedge clk)
       if (!instruction_err & instruction_we)
-         local_mem[mem_wr_addr[`DATA_MEM_WIDTH+1:2]] <= mem_wr_data;
+         local_mem[mem_wr_addr[`INST_MEM_WIDTH+1:2]] <= mem_wr_data;
    
    always @(*)
       if (instruction_err)

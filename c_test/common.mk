@@ -24,6 +24,8 @@ LINKER_SCRIPT := $(COMMON_DIR)/link.lds
 
 INCLUDES += -I$(COMMON_DIR)
 
+INCLUDES += -I$(COMMON_DIR)/soc/inc
+
 LDFLAGS += -T $(LINKER_SCRIPT) -nostartfiles -Wl,--gc-sections -Wl,--check-sections
 
 ASM_OBJS := $(ASM_SRCS:.S=.o)
