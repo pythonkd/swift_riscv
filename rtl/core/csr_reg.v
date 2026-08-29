@@ -142,10 +142,10 @@ module csr_reg(
     end
 
     always @(*) begin
-        if((clint_rd_addr == csr_wr_addr) && (ex_we)) begin
+        if((csr_rd_addr == csr_wr_addr) && (ex_we)) begin
             csr_rd_data = csr_wr_data;
         end else begin
-            case(clint_rd_addr)
+            case(csr_rd_addr)
                 `CSR_MTVEC: csr_rd_data = mtvec;
                 `CSR_MCAUSE: csr_rd_data = mcause;
                 `CSR_MEPC: csr_rd_data = mepc;
@@ -160,10 +160,10 @@ module csr_reg(
     end
 
     always @(*) begin
-        if((csr_rd_addr == clint_wr_addr) && (clint_we)) begin
+        if((clint_rd_addr == clint_wr_addr) && (clint_we)) begin
             clint_rd_data = clint_wr_data;
         end else begin
-            case(csr_rd_addr)
+            case(clint_rd_addr)
                 `CSR_MTVEC: clint_rd_data = mtvec;
                 `CSR_MCAUSE: clint_rd_data = mcause;
                 `CSR_MEPC: clint_rd_data = mepc;

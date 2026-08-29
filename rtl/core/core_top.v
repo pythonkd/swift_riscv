@@ -25,7 +25,7 @@ module core_top (
     wire stop;
     wire reg_we_pipe2;
     wire mem_we_pipe2;
-    wire csr_we_pipe2;
+    wire csr_we;
     wire jump_en_pipe2;
     wire div_op_start;
     wire alu_flush_flag;
@@ -266,7 +266,7 @@ module core_top (
         //output
         .reg_we(reg_we_pipe2),
         .mem_we(mem_we_pipe2),
-        .csr_we(csr_we_pipe2),
+        .csr_we(csr_we),
         .jump_en(jump_en_pipe2),
         .div_op_start(div_op_start),
         .alu_flush_flag(alu_flush_flag),
@@ -289,7 +289,7 @@ module core_top (
         // input
         .clk(clk),
         .rst_n(rst_n),
-        .ex_we(csr_we_pipe2),
+        .ex_we(csr_we),
         .csr_rd_addr(csr_rd_addr_pipe1),
         .csr_wr_addr(csr_wr_addr_pipe2),
         .csr_wr_data(csr_wr_data_pipe2),

@@ -68,7 +68,8 @@ module d_lm(
 
 
    
-   always @(*)
+   always @(*) begin
+      mem_rd_data = `REG_WIDTH'b0;
       if (data_err)
          mem_rd_data = `REG_WIDTH'b0;
       else begin
@@ -93,5 +94,6 @@ module d_lm(
             end
          endcase
       end
+   end
 
 endmodule

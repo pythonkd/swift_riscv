@@ -24,7 +24,7 @@ run_freertos:
 	|tee vcs.log 
 
 run_test:
-	vcs -f ../ttesb/tb.f \
+	vcs -f ../tb/tb.f \
 	-timescale=1ns/1ps \
 	-full64 +v2k -sverilog -Mupdate +define+DUMP_FSDB \
 	-R \

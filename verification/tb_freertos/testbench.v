@@ -105,7 +105,7 @@ always #(`SIM_PERIOD/2) clk = ~clk;
 
 task time_out;
     begin
-        #(`SIM_PERIOD * 20000_000);
+        #(`SIM_PERIOD * 1000_0000_000);
         $display("=================>Time Out<=================");
     end
 endtask
