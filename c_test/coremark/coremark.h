@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-24 22:53:03
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-30 15:34:51
+ * @LastEditTime: 2026-08-30 22:37:30
  * @FilePath: /swift_riscv/c_test/coremark/coremark.h
  * @Description:
  *
