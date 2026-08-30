@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-30 07:36:20
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-30 09:55:46
+ * @LastEditTime: 2026-08-30 21:10:43
  * @FilePath: /swift_riscv/c_test/soc/inc/csr.h
  * @Description:
  *
@@ -19,6 +19,16 @@
 #define CSR_MIE (0x304)
 #define CSR_MSTATUS (0x300)
 #define CSR_MSCRATCH (0x340)
+
+#define mepc CSR_MEPC
+#define cycle CSR_CYCLE
+#define cycleh CSR_CYCLEH
+#define mtvec CSR_MTVEC
+#define mcause CSR_MCAUSE
+#define mie CSR_MIE
+#define mstatus CSR_MSTATUS
+#define mscratch CSR_MSCRATCH
+
 
 #define STR(S) #S
 #define XSTR(S) STR(S)

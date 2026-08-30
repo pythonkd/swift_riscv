@@ -55,6 +55,7 @@
 #include "xprintf.h"
 #include "swift_config.h"
 #include "mtimer.h"
+#include "csr.h"
 #define UART_TEST_PASS 0xABCD0000
 #define UART_TEST_FAIL 0xABCD0001
 /*-----------------------------------------------------------*/
@@ -101,11 +102,15 @@ void print_swift_rv_logo(void)
 	xprintf("\n");
 }
 
-unsigned int get_timer_freq(void) { return (unsigned int)MTIMERFRQ; }
+unsigned int get_timer_freq(void) { return (unsigned int)CPUFREQ; }
 
-uint64_t get_timer_value(void)
-{
-	return mtimer_get_cycle();
+uint64_t get_timer_value(void) {
+    do {
+        unsigned long hi = read_csr(cycleh);
+        unsigned long lo = read_csr(cycle);
+
+        if (hi == read_csr(cycleh)) return ((uint64_t)hi << 32) | lo;
+    } while (1);
 }
 
 void __exit__(uint8_t ret)

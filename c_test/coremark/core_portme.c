@@ -3,7 +3,7 @@
 
 #include "config.h"
 #include "coremark.h"
-// #include "encoding.h"
+#include "csr.h"
 
 #if VALIDATION_RUN
 volatile ee_s32 seed1_volatile = 0x3415;
@@ -33,18 +33,14 @@ extern uint64_t get_timer_value();
 #ifdef CFG_DEBUG
 unsigned long long rdmcycle(void)
 {
-    // #if __riscv_xlen == 32
-    //     do
-    //     {
-    //         unsigned long hi = read_csr(CSR_CYCLEH);
-    //         unsigned long lo = read_csr(CSR_CYCLE);
+    do
+    {
+        unsigned long hi = read_csr(cycleh);
+        unsigned long lo = read_csr(cycle);
 
-    //         if (hi == read_csr(CSR_CYCLE))
-    //             return ((unsigned long long)hi << 32) | lo;
-    //     } while (1);
-    // #else
-    //     return (unsigned long long)read_csr(CSR_CYCLE);
-    // #endif
+        if (hi == read_csr(cycleh))
+            return ((unsigned long long)hi << 32) | lo;
+    } while (1);
     return 0;
 }
 
@@ -69,31 +65,30 @@ unsigned long long rdminstret(void)
 
 void start_time(void)
 {
+#ifdef CFG_DEBUG
 #ifdef CFG_MTIME
     ee_printf("\nThe time is from mtime\n");
 #else
     ee_printf("\nThe time is from mcycle\n");
 #endif
+#endif
     t0 = get_timer_value();
-
-    // #ifdef CFG_DEBUG
-    //     ee_printf("The current mcycle value of benchmark are:%u \n",
-    //               (unsigned int)rdmcycle());
-    //     ee_printf("The current minstreth value of benchmark are:%u \n",
-    //               (unsigned int)rdminstret());
-    // #endif
+#ifdef CFG_DEBUG
+        ee_printf("The current mcycle value of benchmark are:%u \n", (unsigned int)rdmcycle());
+        // ee_printf("The current minstreth value of benchmark are:%u \n",
+        //           (unsigned int)rdminstret());
+#endif
 }
 
 void stop_time(void)
 {
     t1 = get_timer_value();
 
-    // #ifdef CFG_DEBUG
-    //     ee_printf("The current mcycle value of benchmark are:%u \n",
-    //               (unsigned int)rdmcycle());
-    //     ee_printf("The current minstreth value of benchmark are:%u \n",
-    //               (unsigned int)rdminstret());
-    // #endif
+    #ifdef CFG_DEBUG
+        ee_printf("The current mcycle value of benchmark are:%u \n", (unsigned int)rdmcycle());
+        // ee_printf("The current minstreth value of benchmark are:%u \n",
+        //           (unsigned int)rdminstret());
+    #endif
 }
 
 CORE_TICKS get_time(void) { return (CORE_TICKS)t1 - t0; }
@@ -105,5 +100,8 @@ secs_ret time_in_secs(CORE_TICKS ticks)
     secs_ret delta = (secs_ret)ticks;
     secs_ret freq = (secs_ret)get_timer_freq();
     secs_ret val = delta / freq;
+#ifdef CFG_DEBUG
+    ee_printf("delta:%u, freq:%u, val:%u \n", delta, freq, val);
+#endif
     return val;
 }
