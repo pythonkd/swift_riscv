@@ -54,6 +54,7 @@
 #include "csr.h"
 #include "xprintf.h"
 #include "swift_config.h"
+#include "mtimer.h"
 #define UART_TEST_PASS 0xABCD0000
 #define UART_TEST_FAIL 0xABCD0001
 /*-----------------------------------------------------------*/
@@ -100,15 +101,11 @@ void print_swift_rv_logo(void)
 	xprintf("\n");
 }
 
-unsigned int get_timer_freq(void) { return (unsigned int)CPUFREQ; }
+unsigned int get_timer_freq(void) { return (unsigned int)MTIMERFRQ; }
 
-uint64_t get_timer_value(void) {
-    do {
-        unsigned long hi = read_csr(CSR_CYCLEH);
-        unsigned long lo = read_csr(CSR_CYCLE);
-
-        if (hi == read_csr(CSR_CYCLEH)) return ((uint64_t)hi << 32) | lo;
-    } while (1);
+uint64_t get_timer_value(void)
+{
+	return mtimer_get_cycle();
 }
 
 void __exit__(uint8_t ret)
@@ -131,7 +128,7 @@ int main(void)
 	uint8_t ret = 0;
 	demo_test();
 	coremark_main();
-	
+
 	// xTaskCreate(demo_test,				  /* The function that implements the task. */
 	// 			"demo",					  /* The text name assigned to the task - for debug only as it is not used by the kernel. */
 	// 			configMINIMAL_STACK_SIZE, /* The size of the stack to allocate to the task. */

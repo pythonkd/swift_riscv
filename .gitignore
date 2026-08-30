@@ -15,5 +15,6 @@ verification/sim/*.key
 *.data
 *.dump
 *.map
+sim_out.fsdb.*
 tools
 freertos

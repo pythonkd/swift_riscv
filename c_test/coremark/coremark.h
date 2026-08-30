@@ -1,4 +1,14 @@
 /*
+ * @Author: pythonkd 1181878670@qq.com
+ * @Date: 2026-08-24 22:53:03
+ * @LastEditors: pythonkd 1181878670@qq.com
+ * @LastEditTime: 2026-08-30 15:34:51
+ * @FilePath: /swift_riscv/c_test/coremark/coremark.h
+ * @Description:
+ *
+ * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved.
+ */
+/*
 Copyright 2018 Embedded Microprocessor Benchmark Consortium (EEMBC)
 
 Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,6 +47,7 @@ Original Author: Shay Gal-on
 
 #include "core_portme.h"
 #include "xprintf.h"
+#include "csr.h"
 #if HAS_STDIO
 #include <stdio.h>
 #endif

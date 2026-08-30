@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:09:51
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-27 22:25:53
+ * @LastEditTime: 2026-08-30 20:50:21
  * @FilePath: /swift_riscv/verification/tb_freertos/testbench.v
  * @Description: 
  * 
@@ -105,7 +105,26 @@ always #(`SIM_PERIOD/2) clk = ~clk;
 
 task time_out;
     begin
-        #(`SIM_PERIOD * 20000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
+        #(`SIM_PERIOD * 90000_000);
         $display("=================>Time Out<=================");
     end
 endtask

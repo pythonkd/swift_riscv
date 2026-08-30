@@ -20,6 +20,9 @@ ASM_SRCS += $(COMMON_DIR)/trap_entry.S
 C_SRCS += $(COMMON_DIR)/trap_handler.c
 
 
+C_SRCS += $(COMMON_DIR)/mtimer/mtimer.c
+INCLUDES += -I$(COMMON_DIR)/mtimer
+
 LINKER_SCRIPT := $(COMMON_DIR)/link.lds
 
 INCLUDES += -I$(COMMON_DIR)

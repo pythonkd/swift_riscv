@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-27 22:39:05
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-27 23:04:20
+ * @LastEditTime: 2026-08-30 20:37:59
  * @FilePath: /swift_riscv/c_test/swift_config.h
  * @Description:
  *
@@ -11,6 +11,7 @@
 #ifndef __SWIFT_CONFIG_H__
 #define __SWIFT_CONFIG_H__
 #define CPUFREQ (50000000)
+#define MTIMERFRQ (1000000)
 #define MHz (1000000)
 
 #define MTIMER_BASE_ADDR (0x20000000)

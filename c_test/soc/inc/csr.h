@@ -1,6 +1,15 @@
+/*
+ * @Author: pythonkd 1181878670@qq.com
+ * @Date: 2026-08-30 07:36:20
+ * @LastEditors: pythonkd 1181878670@qq.com
+ * @LastEditTime: 2026-08-30 09:55:46
+ * @FilePath: /swift_riscv/c_test/soc/inc/csr.h
+ * @Description:
+ *
+ * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved.
+ */
 #ifndef __CSR_H__
 #define __CSR_H__
-
 
 #define CSR_MEPC (0x341)
 #define CSR_CYCLE (0xc00)

@@ -33,34 +33,36 @@ extern uint64_t get_timer_value();
 #ifdef CFG_DEBUG
 unsigned long long rdmcycle(void)
 {
-#if __riscv_xlen == 32
-    do
-    {
-        unsigned long hi = read_csr(mcycleh);
-        unsigned long lo = read_csr(mcycle);
+    // #if __riscv_xlen == 32
+    //     do
+    //     {
+    //         unsigned long hi = read_csr(CSR_CYCLEH);
+    //         unsigned long lo = read_csr(CSR_CYCLE);
 
-        if (hi == read_csr(mcycleh))
-            return ((unsigned long long)hi << 32) | lo;
-    } while (1);
-#else
-    return (unsigned long long)read_csr(mcycle);
-#endif
+    //         if (hi == read_csr(CSR_CYCLE))
+    //             return ((unsigned long long)hi << 32) | lo;
+    //     } while (1);
+    // #else
+    //     return (unsigned long long)read_csr(CSR_CYCLE);
+    // #endif
+    return 0;
 }
 
 unsigned long long rdminstret(void)
 {
-#if __riscv_xlen == 32
-    do
-    {
-        unsigned long hi = read_csr(CSR_MINSTRETH);
-        unsigned long lo = read_csr(CSR_MINSTRET);
+    // #if __riscv_xlen == 32
+    //     do
+    //     {
+    //         unsigned long hi = read_csr(CSR_MINSTRETH);
+    //         unsigned long lo = read_csr(CSR_MINSTRET);
 
-        if (hi == read_csr(CSR_MINSTRETH))
-            return ((unsigned long long)hi << 32) | lo;
-    } while (1);
-#else
-    return (unsigned long long)read_csr(CSR_MINSTRET);
-#endif
+    //         if (hi == read_csr(CSR_MINSTRETH))
+    //             return ((unsigned long long)hi << 32) | lo;
+    //     } while (1);
+    // #else
+    //     return (unsigned long long)read_csr(CSR_MINSTRET);
+    // #endif
+    return 0;
 }
 
 #endif
@@ -68,30 +70,30 @@ unsigned long long rdminstret(void)
 void start_time(void)
 {
 #ifdef CFG_MTIME
-    printf("\nThe time is from mtime\n");
+    ee_printf("\nThe time is from mtime\n");
 #else
-    printf("\nThe time is from mcycle\n");
+    ee_printf("\nThe time is from mcycle\n");
 #endif
     t0 = get_timer_value();
 
-#ifdef CFG_DEBUG
-    printf("The current mcycle value of benchmark are:%u \n",
-           (unsigned int)rdmcycle());
-    printf("The current minstreth value of benchmark are:%u \n",
-           (unsigned int)rdminstret());
-#endif
+    // #ifdef CFG_DEBUG
+    //     ee_printf("The current mcycle value of benchmark are:%u \n",
+    //               (unsigned int)rdmcycle());
+    //     ee_printf("The current minstreth value of benchmark are:%u \n",
+    //               (unsigned int)rdminstret());
+    // #endif
 }
 
 void stop_time(void)
 {
     t1 = get_timer_value();
 
-#ifdef CFG_DEBUG
-    printf("The current mcycle value of benchmark are:%u \n",
-           (unsigned int)rdmcycle());
-    printf("The current minstreth value of benchmark are:%u \n",
-           (unsigned int)rdminstret());
-#endif
+    // #ifdef CFG_DEBUG
+    //     ee_printf("The current mcycle value of benchmark are:%u \n",
+    //               (unsigned int)rdmcycle());
+    //     ee_printf("The current minstreth value of benchmark are:%u \n",
+    //               (unsigned int)rdminstret());
+    // #endif
 }
 
 CORE_TICKS get_time(void) { return (CORE_TICKS)t1 - t0; }

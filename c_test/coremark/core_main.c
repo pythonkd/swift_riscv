@@ -125,14 +125,12 @@ coremark_main(int argc, char *argv[])
     results[0].seed1 = get_seed(1);
     results[0].seed2 = get_seed(2);
     results[0].seed3 = get_seed(3);
-#if 0
-    results[0].iterations = get_seed_32(4);
+
+#if defined(CORE_DEBUG)
+    results[0].iterations = ITERATIONS;
 #else
-    results[0].iterations = 1;
+    results[0].iterations = get_seed_32(4);
 #endif
-// #if defined(CORE_DEBUG)
-//     results[0].iterations = 1;
-// #endif
     results[0].execs = get_seed_32(5);
     if (results[0].execs == 0)
     { /* if not supplied, execute all algorithms */
