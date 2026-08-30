@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-26 23:08:00
+ * @LastEditTime: 2026-08-30 09:16:45
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 统一译码的 ALU 模块
  * 
@@ -61,7 +61,7 @@ module alu(
     reg pre_ready;
 
     // 对外输出
-    assign alu_flush_flag = ecall_except || ebreak_except || jump_en;
+    assign alu_flush_flag = ecall_except || ebreak_except || mret_occurred || jump_en;
     assign alu_stall_flag = div_stall_flag;
 
     // ===================================================================

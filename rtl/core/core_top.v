@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-25 21:39:38
+ * @LastEditTime: 2026-08-30 09:13:29
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -33,10 +33,10 @@ module core_top (
     wire data_err;
     wire instruction_err;
     wire instruction_decode_err;
-    wire ecall_except_pipe2;
-    wire ebreak_except_pipe2;
+    wire ecall_except;
+    wire ebreak_except;
     wire exception;
-    wire mret_occurred_pipe2;
+    wire mret_occurred;
     wire mret_jump;
     wire mem_req_valid;
     wire mem_rd_valid;
@@ -120,7 +120,7 @@ module core_top (
     wire if_stall_flag;
     wire decode_flush_flag;
     wire decode_stall_flag;
-    assign sync_except = instruction_err || instruction_decode_err || ebreak_except_pipe2 || ecall_except_pipe2 || data_err;
+    assign sync_except = instruction_err || instruction_decode_err || ebreak_except || ecall_except || data_err;
     assign async_except = ex_int_process || (mtimer_int & mtimer_int_en);
     assign exception = sync_except || (async_except & global_int_en);
     assign decode_flush_flag = alu_flush_flag || clint_hold_flag || sync_except || async_except;
@@ -271,8 +271,8 @@ module core_top (
         .div_op_start(div_op_start),
         .alu_flush_flag(alu_flush_flag),
         .alu_stall_flag(alu_stall_flag),
-        .ecall_except(ecall_except_pipe2),
-        .ebreak_except(ebreak_except_pipe2),
+        .ecall_except(ecall_except),
+        .ebreak_except(ebreak_except),
         .jump(jump_pipe2),
         .imm(imm_pipe2),
         .rd_data(rd_data_pipe2),
@@ -282,7 +282,7 @@ module core_top (
         .mem_req_valid(mem_req_valid),
         .csr_wr_data(csr_wr_data_pipe2),
         .csr_wr_addr(csr_wr_addr_pipe2),
-        .mret_occurred(mret_occurred_pipe2)
+        .mret_occurred(mret_occurred)
     );
 
     csr_reg u_csr_reg(
@@ -297,13 +297,13 @@ module core_top (
         .clint_rd_addr(clint_rd_addr),
         .clint_wr_addr(clint_csr_wr_addr),
         .clint_wr_data(clint_csr_wr_data),
-        .ecall_except(ecall_except_pipe2),
-        .ebreak_except(ebreak_except_pipe2),
+        .ecall_except(ecall_except),
+        .ebreak_except(ebreak_except),
         .instruction_decode_err(instruction_decode_err),
         .data_err(data_err),
         .ex_int(ex_int_process),
         .mtimer_int(mtimer_int),
-        .mret_occurred(mret_occurred_pipe2),
+        .mret_occurred(mret_occurred),
         //output
         .global_int_en(global_int_en),
         .mtimer_int_en(mtimer_int_en),
@@ -402,7 +402,7 @@ module core_top (
         .clk(clk),
         .rst_n(rst_n),
         .instruction_addr(cur_pc_pipe2),
-        .mret_occurred(mret_occurred_pipe2),
+        .mret_occurred(mret_occurred),
         .global_int_en(global_int_en),
         .ex_int_en(ex_int_en),
         .hold_flag(alu_stall_flag),

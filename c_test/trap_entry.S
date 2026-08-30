@@ -44,18 +44,16 @@ trap_entry:
 
     csrr a0, mcause
     csrr a1, mepc
-test_if_asynchronous:
-	srli a2, a0, 31		                /* MSB of mcause is 1 if handing an asynchronous interrupt - shift to LSB to clear other bits. */
-	beq a2, x0, handle_synchronous		/* Branch past interrupt handing if not asynchronous. */
+    li t0, 0xb
+    beq a0, t0, handle_synchronous
 
-    call trap_handler
-    j asynchronous_return
+    j context_return
 
 handle_synchronous:
     addi a1, a1, 4
     csrw mepc, a1
 
-asynchronous_return:
+context_return:
     LOAD x1, 1*REGBYTES(sp)
     LOAD x2, 2*REGBYTES(sp)
     LOAD x3, 3*REGBYTES(sp)
@@ -91,9 +89,3 @@ asynchronous_return:
     addi sp, sp, 32*REGBYTES
 
     mret
-
-
-.weak trap_handler
-trap_handler:
-1:
-    j 1b
