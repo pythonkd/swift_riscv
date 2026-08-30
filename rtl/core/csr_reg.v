@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-27 21:32:32
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-16 00:41:22
+ * @LastEditTime: 2026-08-30 09:33:25
  * @FilePath: /swift_riscv/rtl/core/csr_reg.v
  * @Description: 
  * 
@@ -97,10 +97,10 @@ module csr_reg(
 
     // except end
     always@(*) begin
-        mret_jump <= 1'b0;
+        mret_jump = 1'b0;
         if (mret_occurred) begin
             mstatus[MIE_BIT] = mstatus[MPIE_BIT];
-            mret_jump <= 1'b1;
+            mret_jump = 1'b1;
         end
     end
 
@@ -142,10 +142,10 @@ module csr_reg(
     end
 
     always @(*) begin
-        if((clint_rd_addr == csr_wr_addr) && (ex_we)) begin
+        if((csr_rd_addr == csr_wr_addr) && (ex_we)) begin
             csr_rd_data = csr_wr_data;
         end else begin
-            case(clint_rd_addr)
+            case(csr_rd_addr)
                 `CSR_MTVEC: csr_rd_data = mtvec;
                 `CSR_MCAUSE: csr_rd_data = mcause;
                 `CSR_MEPC: csr_rd_data = mepc;
@@ -160,10 +160,10 @@ module csr_reg(
     end
 
     always @(*) begin
-        if((csr_rd_addr == clint_wr_addr) && (clint_we)) begin
+        if((clint_rd_addr == clint_wr_addr) && (clint_we)) begin
             clint_rd_data = clint_wr_data;
         end else begin
-            case(csr_rd_addr)
+            case(clint_rd_addr)
                 `CSR_MTVEC: clint_rd_data = mtvec;
                 `CSR_MCAUSE: clint_rd_data = mcause;
                 `CSR_MEPC: clint_rd_data = mepc;
