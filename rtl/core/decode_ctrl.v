@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 22:00:12
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-16 17:09:23
+ * @LastEditTime: 2026-08-30 21:56:48
  * @FilePath: /swift_riscv/rtl/core/decode_ctrl.v
  * @Description: 
  * 
@@ -16,8 +16,7 @@ module decode(
     output reg [`INST_RD_WIDTH  - 1: 0]rd_index,
     output reg [`INST_RS1_WIDTH  - 1: 0]rs1_index,
     output reg [`INST_RS2_WIDTH  - 1: 0]rs2_index,
-    output reg [`INST_CSR_WIDTH - 1: 0]csr_index,
-    output reg instruction_decode_err
+    output reg [`INST_CSR_WIDTH - 1: 0]csr_index
 );
     wire [`INST_OPCODE_WIDTH - 1: 0]opcode = instruction[`INST_OPCODE_BASE + `INST_OPCODE_WIDTH - 1: `INST_OPCODE_BASE];
     wire [`INST_RD_WIDTH - 1: 0]rd = instruction[`INST_RD_BASE + `INST_RD_WIDTH - 1: `INST_RD_BASE];
@@ -28,7 +27,6 @@ module decode(
     wire [`INST_FUNC5_WIDTH - 1: 0]func5 = instruction[`INST_FUNC5_BASE + `INST_FUNC5_WIDTH - 1: `INST_FUNC5_BASE];
     wire [`INST_CSR_WIDTH - 1: 0]csr = instruction[`INST_CSR_BASE + `INST_CSR_WIDTH - 1: `INST_CSR_BASE];
     always @(*) begin
-        instruction_decode_err = 0;
         rs1_index = 0;
         rs2_index = 0;
         rd_index = 0;
@@ -93,7 +91,6 @@ module decode(
                 `INST_HOST_CPU_TYPE: begin
                 end
                 default: begin
-                    instruction_decode_err = 1;
                 end
             endcase
         end

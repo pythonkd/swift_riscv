@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-30 11:13:31
+ * @LastEditTime: 2026-08-30 21:58:36
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 统一译码的 ALU 模块
  * 
@@ -37,7 +37,8 @@ module alu(
     output reg mem_req_valid,
     output reg [`REG_WIDTH - 1:0] csr_wr_data,
     output reg [`INST_CSR_WIDTH - 1:0] csr_wr_addr,
-    output reg mret_occurred
+    output reg mret_occurred,
+    output reg instruction_decode_err
 );
 
     // 指令字段提取
@@ -114,6 +115,7 @@ module alu(
         csr_wr_data    = {`REG_WIDTH{1'b0}};
         csr_wr_addr    = {`INST_CSR_WIDTH{1'b0}};
         mem_strb = `STRB_WIDTH'b1111;
+        instruction_decode_err = 0;
         // ---------- 根据 opcode 译码 ----------
         case (opcode)
 
@@ -353,8 +355,10 @@ module alu(
             `INST_OPCODE_NOP_TYPE: begin
                 
             end
-
-            default: ;
+            default: begin
+                if (instruction)
+                    instruction_decode_err = 1;
+            end
         endcase
     end
 

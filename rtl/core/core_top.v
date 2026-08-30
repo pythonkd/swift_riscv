@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-30 09:13:29
+ * @LastEditTime: 2026-08-30 21:56:03
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -223,8 +223,7 @@ module core_top (
         .csr_index(csr_rd_addr_pipe1),
         .rd_index(rd_index_pipe1),
         .rs1_index(rs1_index_pipe1),
-        .rs2_index(rs2_index_pipe1),
-        .instruction_decode_err(instruction_decode_err)
+        .rs2_index(rs2_index_pipe1)
     );
 
     decode_to_alu_dff u_decode_to_alu_dff(
@@ -282,7 +281,8 @@ module core_top (
         .mem_req_valid(mem_req_valid),
         .csr_wr_data(csr_wr_data_pipe2),
         .csr_wr_addr(csr_wr_addr_pipe2),
-        .mret_occurred(mret_occurred)
+        .mret_occurred(mret_occurred),
+        .instruction_decode_err(instruction_decode_err)
     );
 
     csr_reg u_csr_reg(
