@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-14 22:22:10
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-30 09:16:45
+ * @LastEditTime: 2026-08-30 11:13:31
  * @FilePath: /swift_riscv/rtl/core/alu.v
  * @Description: 统一译码的 ALU 模块
  * 
@@ -121,22 +121,26 @@ module alu(
             // 1. R 型指令（算术/逻辑/移位/乘除）
             // ------------------------------------------------------------
             `INST_OPCODE_R_TYPE: begin
+                reg_we = 1'b1;
                 case (func7)
                     // -------- 基础运算 (ADD, SUB, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND) --------
-                    `INST_R_FUNC7_BASE_TYPE0,
-                    `INST_R_FUNC7_BASE_TYPE1: begin
-                        reg_we = 1'b1;
+                    `INST_R_FUNC7_BASE_TYPE0: begin
                         case (func3)
                             `INST_OPCODE_R_ADD:   rd_data = rs1_data + rs2_data;
-                            `INST_OPCODE_R_SUB:   rd_data = rs1_data - rs2_data;
                             `INST_OPCODE_R_XOR:   rd_data = rs1_data ^ rs2_data;
                             `INST_OPCODE_R_OR:    rd_data = rs1_data | rs2_data;
                             `INST_OPCODE_R_AND:   rd_data = rs1_data & rs2_data;
                             `INST_OPCODE_R_SLL:   rd_data = rs1_data << rs2_data[4:0];
                             `INST_OPCODE_R_SRL:   rd_data = rs1_data >> rs2_data[4:0];
-                            `INST_OPCODE_R_SRA:   rd_data = $signed(rs1_data) >>> rs2_data[4:0];
                             `INST_OPCODE_R_SLT:   rd_data = ($signed(rs1_data) < $signed(rs2_data)) ? `REG_WIDTH'b1 : `REG_WIDTH'b0;
                             `INST_OPCODE_R_SLTU:  rd_data = (rs1_data < rs2_data) ? `REG_WIDTH'b1 : `REG_WIDTH'b0;
+                            default: ; // 保持默认
+                        endcase
+                    end
+                    `INST_R_FUNC7_BASE_TYPE1: begin
+                        case (func3)
+                            `INST_OPCODE_R_SUB:   rd_data = rs1_data - rs2_data;
+                            `INST_OPCODE_R_SRA:   rd_data = $signed(rs1_data) >>> rs2_data[4:0];
                             default: ; // 保持默认
                         endcase
                     end
