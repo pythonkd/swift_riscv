@@ -7,6 +7,7 @@ $ROOT_PATH/rtl/crg/crg.v
 $ROOT_PATH/rtl/core/core_top.v
 $ROOT_PATH/rtl/core/pc_reg.v
 $ROOT_PATH/rtl/core/pc_mux.v
+$ROOT_PATH/rtl/core/predict.v
 $ROOT_PATH/rtl/core/reg_file.v
 $ROOT_PATH/rtl/core/csr_reg.v
 $ROOT_PATH/rtl/core/decode_ctrl.v

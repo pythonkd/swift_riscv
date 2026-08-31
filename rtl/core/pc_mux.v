@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 18:02:19
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-16 18:25:15
+ * @LastEditTime: 2026-08-31 21:56:53
  * @FilePath: /swift_riscv/rtl/core/pc_mux.v
  * @Description: 
  * 
@@ -22,6 +22,8 @@ module pc_mux(
     input [`REG_WIDTH - 1: 0]csr_mtvec,
     input [`REG_WIDTH - 1: 0]csr_mepc,
     input mret_jump,
+    input predict_jump_en,
+    input [`REG_WIDTH - 1: 0]predict_pc,
     output reg [`REG_WIDTH - 1: 0]nx_pc
 );
     always @(*) begin
@@ -39,5 +41,7 @@ module pc_mux(
             nx_pc = csr_mepc;
         else if(hold_flag)
             nx_pc = cur_pc0;
+        else if (predict_jump_en)
+            nx_pc = predict_pc;
     end
 endmodule

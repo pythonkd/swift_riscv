@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-07-12 16:12:15
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-30 21:56:03
+ * @LastEditTime: 2026-08-31 22:33:15
  * @FilePath: /swift_riscv/rtl/core/core_top.v
  * @Description: 
  * 
@@ -120,6 +120,10 @@ module core_top (
     wire if_stall_flag;
     wire decode_flush_flag;
     wire decode_stall_flag;
+    wire predict_jump_en_pipe0;
+    wire predict_jump_en_pipe1;
+    wire predict_jump_en_pipe2;
+    wire [`REG_WIDTH -1 : 0]predict_pc;
     assign sync_except = instruction_err || instruction_decode_err || ebreak_except || ecall_except || data_err;
     assign async_except = ex_int_process || (mtimer_int & mtimer_int_en);
     assign exception = sync_except || (async_except & global_int_en);
@@ -140,6 +144,16 @@ module core_top (
         .stop(stop)
     );
 
+    predict u_predict(
+        // input
+        .instruction(instruction_pipe0),
+        .instruction_valid(instruction_valid_pipe0),
+        .current_pc(cur_pc_pipe0),
+        // output
+        .predict_jump_en(predict_jump_en_pipe0),
+        .predict_pc(predict_pc)
+    );
+
     pc_mux u_pc_mux(
         // input
         .cur_pc0(cur_pc_pipe0),
@@ -153,6 +167,8 @@ module core_top (
         .csr_mepc(csr_mepc),
         .exception(exception),
         .mret_jump(mret_jump),
+        .predict_jump_en(predict_jump_en_pipe0),
+        .predict_pc(predict_pc),
         //output
         .nx_pc(nx_pc)
     );
@@ -208,11 +224,13 @@ module core_top (
         .instruction_valid_pipe0(instruction_valid_pipe0),
         .cur_pc_pipe0(cur_pc_pipe0),
         .ex_int_src_pipe0(ex_int_src_pipe0),
+        .predict_jump_en_pipe0(predict_jump_en_pipe0),
         // output
         .ex_int_src_pipe1(ex_int_src_pipe1),
         .instruction_valid_pipe1(instruction_valid_pipe1),
         .instruction_pipe1(instruction_pipe1),
-        .cur_pc_pipe1(cur_pc_pipe1)
+        .cur_pc_pipe1(cur_pc_pipe1),
+        .predict_jump_en_pipe1(predict_jump_en_pipe1)
     );
 
     decode u_decode(
@@ -240,6 +258,7 @@ module core_top (
         .cur_pc_pipe1(cur_pc_pipe1),
         .csr_rd_data_pipe1(csr_rd_data_pipe1),
         .ex_int_src_pipe1(ex_int_src_pipe1),
+        .predict_jump_en_pipe1(predict_jump_en_pipe1),
         // output
         .rs1_data_pipe2(rs1_data_pipe2),
         .rs2_data_pipe2(rs2_data_pipe2),
@@ -248,7 +267,8 @@ module core_top (
         .instruction_pipe2(instruction_pipe2),
         .cur_pc_pipe2(cur_pc_pipe2),
         .csr_rd_data_pipe2(csr_rd_data_pipe2),
-        .ex_int_src_pipe2(ex_int_src_pipe2)
+        .ex_int_src_pipe2(ex_int_src_pipe2),
+        .predict_jump_en_pipe2(predict_jump_en_pipe2)
     );
 
     alu u_alu(
@@ -262,6 +282,7 @@ module core_top (
         .csr_rd_data(csr_rd_data_pipe2),
         .mem_rd_valid(mem_rd_valid),
         .mem_rd_data(mem_rd_data_pipe2),
+        .predict_jump_en(predict_jump_en_pipe2),
         //output
         .reg_we(reg_we_pipe2),
         .mem_we(mem_we_pipe2),

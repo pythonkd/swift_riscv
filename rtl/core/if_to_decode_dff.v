@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-08 17:44:01
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-16 22:58:12
+ * @LastEditTime: 2026-08-31 22:28:13
  * @FilePath: /swift_riscv/rtl/core/if_to_decode_dff.v
  * @Description: 
  * 
@@ -17,11 +17,25 @@ module if_to_decode_dff(
     input [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe0,
     input flush_flag,
     input stall_flag,
+    input predict_jump_en_pipe0,
     output [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe1,
     output instruction_valid_pipe1,
     output [`REG_WIDTH - 1: 0]instruction_pipe1,
-    output [`REG_WIDTH - 1: 0]cur_pc_pipe1
+    output [`REG_WIDTH - 1: 0]cur_pc_pipe1,
+    output predict_jump_en_pipe1
 );
+    gen_stall_flush_default_dff #(
+        .DW(1),
+        .STAGS(1)
+    ) u_pc_to_decode_predict_jump_en(
+        .clk(clk),
+        .rst_n(rst_n),
+        .flush_en(flush_flag),
+        .stall_en(stall_flag),
+        .din(predict_jump_en_pipe0),
+        .dout(predict_jump_en_pipe1)
+    );
+
     gen_stall_flush_default_dff #(
         .DW(1),
         .STAGS(1)

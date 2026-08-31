@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-08 17:53:32
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-16 22:58:03
+ * @LastEditTime: 2026-08-31 22:34:58
  * @FilePath: /swift_riscv/rtl/core/decode_to_alu_dff.v
  * @Description: 
  * 
@@ -22,6 +22,7 @@
     input [`REG_WIDTH - 1: 0]cur_pc_pipe1,
     input [`REG_WIDTH - 1: 0]csr_rd_data_pipe1,
     input [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe1,
+    input predict_jump_en_pipe1,
 
     output [`REG_WIDTH - 1: 0]rs1_data_pipe2,
     output [`REG_WIDTH - 1: 0]rs2_data_pipe2,
@@ -30,8 +31,21 @@
     output instruction_valid_pipe2,
     output [`REG_WIDTH - 1: 0]cur_pc_pipe2,
     output [`REG_WIDTH - 1: 0]csr_rd_data_pipe2,
-    input [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe2
+    output [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe2,
+    output predict_jump_en_pipe2
+    
  );
+    gen_stall_flush_default_dff #(
+        .DW(1),
+        .STAGS(1)
+    ) u_decode_to_alu_predict_jump_en(
+        .clk(clk),
+        .rst_n(rst_n),
+        .flush_en(flush_flag),
+        .stall_en(stall_flag),
+        .din(predict_jump_en_pipe1),
+        .dout(predict_jump_en_pipe2)
+    );
 
     gen_stall_flush_default_dff #(
         .DW(`INST_RD_WIDTH),
