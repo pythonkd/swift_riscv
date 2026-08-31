@@ -106,6 +106,7 @@ MAIN_RETURN_TYPE
 coremark_main(int argc, char *argv[])
 {
 #endif
+    uint32_t int_val = 0, point_val_0 = 0, point_val_1 = 0,  tmp_val;
     ee_u16 i, j = 0, num_algorithms = 0;
     ee_s16 known_id = -1, total_errors = 0;
     ee_u16 seedcrc = 0;
@@ -334,11 +335,19 @@ for (i = 0; i < MULTITHREAD; i++)
     if (time_in_secs(total_time) > 0)
         ee_printf("Iterations/Sec   : %f\n", default_num_contexts * results[0].iterations / time_in_secs(total_time));
 #else
-    ee_printf("Total time (secs): %d\n", time_in_secs(total_time));
-    if (time_in_secs(total_time) > 0)
-        ee_printf("Iterations/Sec   : %d\n", default_num_contexts * results[0].iterations / time_in_secs(total_time));
+    // ee_printf("Total time (secs): %d\n", time_in_secs(total_time));
+    ee_printf("Total time (ms): %d\n", time_in_secs(total_time * 1000));
+    int_val = default_num_contexts * results[0].iterations * 1000 /  time_in_secs(total_time*1000);
+    tmp_val = (default_num_contexts * results[0].iterations * 1000) % time_in_secs(total_time*1000);
+    point_val_0 = (tmp_val * 10) / time_in_secs(total_time*1000);
+    tmp_val = (tmp_val * 10) % time_in_secs(total_time*1000);
+    point_val_1 = (tmp_val * 10) / time_in_secs(total_time*1000);
+
+    if (time_in_secs(total_time * 1000) > 0)
+        ee_printf("Iterations/Sec   : %u.%u%u\n", int_val, point_val_0, point_val_1);
+        // ee_printf("Iterations/Sec   : %d\n", (default_num_contexts * results[0].iterations) / time_in_secs(total_time));
 #endif
-    if (time_in_secs(total_time) < 10)
+    if (time_in_secs(total_time * 1000) < 10)
     {
         ee_printf("ERROR! Must execute for at least 10 secs for a valid result!\n");
         total_errors++;

@@ -85,9 +85,9 @@ void print_swift_rv_logo(void)
 	xprintf("##############################################\n");
 	xprintf("#                                            #\n");
 	xprintf("#   SSSSS  W     W  IIII  FFFFF  TTTTT       #\n");
-	xprintf("#   S      W     W   I    F        T         #\n");
-	xprintf("#   SSS    W  W  W   I    FFFF     T         #\n");
-	xprintf("#       S  W W W W   I    F        T         #\n");
+	xprintf("#   S      W     W   II   F        T         #\n");
+	xprintf("#   SSS    W  W  W   II   FFFF     T         #\n");
+	xprintf("#       S  W W W W   II   F        T         #\n");
 	xprintf("#   SSSS    W   W   IIII  F        T         #\n");
 	xprintf("#                                            #\n");
 	xprintf("#        RRRRR  V       V                    #\n");

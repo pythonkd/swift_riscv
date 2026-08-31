@@ -97,11 +97,10 @@ secs_ret time_in_secs(CORE_TICKS ticks)
 {
     extern unsigned int get_timer_freq();
 
-    secs_ret delta = (secs_ret)ticks;
     secs_ret freq = (secs_ret)get_timer_freq();
-    secs_ret val = delta / freq;
+    secs_ret val = (secs_ret)(ticks / freq);
 #ifdef CFG_DEBUG
-    ee_printf("delta:%u, freq:%u, val:%u \n", delta, freq, val);
+    ee_printf("delta:%llu, freq:%u, val:%u \n", ticks, freq, val);
 #endif
     return val;
 }

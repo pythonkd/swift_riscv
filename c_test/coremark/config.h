@@ -36,6 +36,6 @@
 // It's suggested to set ITERATIONS as 7000 to run benchmark on real board
 // To speed up CoreMark simulation, the ITERATIONS could be set as 350
 
-#define ITERATIONS 1300
+#define ITERATIONS 100
 
 #endif // __CONFIG_H__
