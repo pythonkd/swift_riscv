@@ -1,3 +1,14 @@
+/*
+ * @Author: pythonkd 1181878670@qq.com
+ * @Date: 2026-08-31 21:24:52
+ * @LastEditors: pythonkd 1181878670@qq.com
+ * @LastEditTime: 2026-08-31 21:33:45
+ * @FilePath: /swift_riscv/c_test/soc/inc/clint.h
+ * @Description: 
+ * 
+ * Copyright (c) 2026 by  kunpeng.zhao, All Rights Reserved. 
+ */
+
 #ifndef __CLINE_H__
 #define __CLINE_H__
 #include "swift_config.h"
