@@ -18,6 +18,9 @@
 
 ## 2. cd verification/sim
 
-## 3. make run
+## 3. make run_freertos
 
 ![pipeline](./picture/pipeline.JPG)
+
+## COREMARK
+![coremark](./picture/cpu_coremark.JPG)
