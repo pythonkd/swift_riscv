@@ -115,6 +115,7 @@ module core_top (
     wire bus_stall_if;
     wire bus_stall_cpu;
     wire hold_cpu;
+    wire flush_cpu;
     wire clint_hold_flag;
     wire if_flush_flag;
     wire if_stall_flag;
@@ -132,8 +133,8 @@ module core_top (
 
     assign if_flush_flag = decode_flush_flag;
     assign if_stall_flag = decode_stall_flag || bus_stall_if;
-    assign hold_cpu = stop || bus_stall_cpu || alu_flush_flag || alu_stall_flag || clint_hold_flag || bus_stall_if;
-    
+    assign hold_cpu = stop || bus_stall_cpu || alu_stall_flag || clint_hold_flag || bus_stall_if;
+    assign flush_cpu = alu_flush_flag || decode_flush_flag || if_flush_flag;
     pc_reg u_pc_reg(
         //input
         .clk(clk),
@@ -162,11 +163,13 @@ module core_top (
         .rs1_data(rs1_data_pipe2),
         .jump(jump_pipe2),
         .jump_en(jump_en_pipe2),
+        .flush_cpu(flush_cpu),
         .hold_flag(hold_cpu),
         .csr_mtvec(csr_mtvec),
         .csr_mepc(csr_mepc),
         .exception(exception),
         .mret_jump(mret_jump),
+        .predict_jump_en_pipe2(predict_jump_en_pipe2),
         .predict_jump_en(predict_jump_en_pipe0),
         .predict_pc(predict_pc),
         //output

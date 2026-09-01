@@ -13,6 +13,7 @@
 module pc_mux(
     input jump_en,
     input hold_flag,
+    input flush_cpu,
     input exception,
     input [`REG_WIDTH - 1: 0]cur_pc0,
     input [`REG_WIDTH - 1: 0]cur_pc2,
@@ -23,12 +24,14 @@ module pc_mux(
     input [`REG_WIDTH - 1: 0]csr_mepc,
     input mret_jump,
     input predict_jump_en,
+    input [`REG_WIDTH - 1: 0]predict_jump_en_pipe2,
     input [`REG_WIDTH - 1: 0]predict_pc,
     output reg [`REG_WIDTH - 1: 0]nx_pc
 );
     always @(*) begin
-        nx_pc = cur_pc0 + `REG_WIDTH'h4;
-        if (jump_en) begin
+        if (flush_cpu && predict_jump_en_pipe2 && !jump_en)
+            nx_pc = cur_pc2 + 32'h4;
+        else if (jump_en&& !predict_jump_en_pipe2) begin
             case(jump)
                 `INST_JUMP_JAL: nx_pc = cur_pc2 + imm;
                 `INST_JUMP_JALR: nx_pc = imm + rs1_data;
@@ -39,9 +42,11 @@ module pc_mux(
             nx_pc = csr_mtvec;
         else if (mret_jump)
             nx_pc = csr_mepc;
-        else if(hold_flag)
-            nx_pc = cur_pc0;
         else if (predict_jump_en)
             nx_pc = predict_pc;
+        else if(hold_flag)
+            nx_pc = cur_pc0;
+        else
+            nx_pc = cur_pc0 + `REG_WIDTH'h4;
     end
 endmodule

@@ -262,6 +262,9 @@ module alu(
                     `INST_OPCODE_B_BGEU: jump_en = (rs1_data >= rs2_data);
                     default: ;
                 endcase
+                if((predict_jump_en == 1'b1) && (jump_en == 1'b1)) begin
+                    imm = {{20{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0} + 32'h8;
+                end
             end
 
             // ------------------------------------------------------------
