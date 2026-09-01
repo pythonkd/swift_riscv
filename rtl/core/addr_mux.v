@@ -2,7 +2,7 @@
  * @Author: pythonkd 1181878670@qq.com
  * @Date: 2026-08-08 11:36:08
  * @LastEditors: pythonkd 1181878670@qq.com
- * @LastEditTime: 2026-08-27 22:57:14
+ * @LastEditTime: 2026-09-01 22:52:01
  * @FilePath: /swift_riscv/rtl/core/addr_mux.v
  * @Description: 
  * 
@@ -23,9 +23,9 @@ module addr_mux(
     input [`REG_WIDTH - 1: 0]mtimer_to_cpu_data,
     input [`REG_WIDTH - 1: 0]clint_to_cpu_data,
     input data_we,
-    output reg cpu_wr_dlm_en,
-    output reg cpu_wr_ilm_en,
-    output reg cpu_wr_external_en,
+    output cpu_wr_dlm_en,
+    output cpu_wr_ilm_en,
+    output cpu_wr_external_en,
     output reg cpu_wr_mtimer_en,
     output reg cpu_wr_clint_en,
     output bus_stall_cpu,
@@ -38,11 +38,11 @@ module addr_mux(
     output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_mem_addr,
     output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_wr_addr,
     output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_data,
-    output reg [`STRB_WIDTH - 1: 0]cpu_to_dlm_strb,
+    output [`STRB_WIDTH - 1: 0]cpu_to_dlm_strb,
     output reg [`REG_WIDTH - 1: 0]cpu_to_dlm_addr,
     output reg [`REG_WIDTH - 1: 0]cpu_to_dlm_data,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_external_addr,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_external_data,
+    output [`REG_WIDTH - 1: 0]cpu_to_external_addr,
+    output [`REG_WIDTH - 1: 0]cpu_to_external_data,
     output reg[`REG_WIDTH - 1: 0]cpu_to_mtimer_addr,
     output reg[`REG_WIDTH - 1: 0]cpu_to_mtimer_data,
     output reg[`REG_WIDTH - 1: 0]cpu_to_clint_addr,
@@ -61,44 +61,39 @@ module addr_mux(
     assign instruction_valid = if_need_external ? extern_data_ready: 1'b1;
     assign mem_rd_valid = mem_need_external && (~data_we) ? extern_data_ready: 1'b1;
 
+    assign cpu_wr_external_en = external_grant_mem ? data_we : 1'b0;
+    assign cpu_to_external_addr = external_grant_mem ? mem_addr :
+                                    if_need_external ? instruction_addr : {`REG_WIDTH{1'b0}};
+    assign cpu_to_external_data = external_grant_mem ? mem_wr_data : {`REG_WIDTH{1'b0}};
+    
     always @(*) begin
-        cpu_wr_external_en = 0;
-        cpu_to_external_addr = {`REG_WIDTH{1'b0}};
-        cpu_to_external_data = {`REG_WIDTH{1'b0}};
         if (external_grant_mem) begin
             mem_rd_data = external_to_cpu_rd_data;
-            cpu_to_external_addr = mem_addr;
-            cpu_wr_external_en = data_we;
-            cpu_to_external_data = mem_wr_data;
         end else if(if_need_external) begin
             instruction = external_to_cpu_rd_data;
-            cpu_to_external_addr = instruction_addr;
-            cpu_wr_external_en   = 1'b0;
         end else begin
             cpu_to_ilm_rd_inst_addr = instruction_addr;
             instruction = ilm_to_cpu_inst_data;
         end
     end
 
+    assign cpu_wr_ilm_en = mem_req_valid && (~mem_need_external) && (mem_addr < `ILM_END_ADDR) ? data_we : 0;
+    assign cpu_wr_dlm_en = mem_req_valid && (~mem_need_external) && (mem_addr < `DLM_END_ADDR) ? data_we : 0;
+    assign cpu_to_dlm_strb = mem_req_valid && (~mem_need_external) && (mem_addr < `DLM_END_ADDR) ? mem_strb : `STRB_WIDTH'b1111;
+    
     always @(*) begin
-        cpu_wr_ilm_en = 0;
-        cpu_wr_dlm_en = 0;
-        cpu_to_dlm_strb = `STRB_WIDTH'b1111;
         if (mem_req_valid && (~mem_need_external)) begin
             if (mem_addr < `ILM_END_ADDR) begin
                 if (data_we)
                     cpu_to_ilm_wr_addr = mem_addr - `ILM_ADDR_BASE;
                 else
                     cpu_to_ilm_rd_mem_addr = mem_addr - `ILM_ADDR_BASE;
-                cpu_wr_ilm_en = data_we;
                 cpu_to_ilm_data = mem_wr_data;
                 mem_rd_data = ilm_to_cpu_mem_data;
             end else if(mem_addr < `DLM_END_ADDR) begin
                 cpu_to_dlm_addr = mem_addr - `DLM_ADDR_BASE;
-                cpu_wr_dlm_en = data_we;
                 cpu_to_dlm_data = mem_wr_data;
                 mem_rd_data = dlm_to_cpu_data;
-                cpu_to_dlm_strb = mem_strb;
             end else if(mem_addr < `MTIMER_END_ADDR) begin
                 cpu_to_mtimer_addr = mem_addr - `MTIMER_ADDR_BASE;
                 cpu_wr_mtimer_en = data_we;
