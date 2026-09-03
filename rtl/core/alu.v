@@ -360,8 +360,12 @@ module alu(
                 
             end
             default: begin
-                if (instruction)
+                if (instruction) begin
+                    csr_we = 1'b1;
                     instruction_decode_err = 1;
+                    csr_wr_data = instruction_addr;
+                    csr_wr_addr = `CSR_MEPC;
+                end
             end
         endcase
     end

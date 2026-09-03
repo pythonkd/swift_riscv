@@ -19,5 +19,11 @@ typedef struct
     uint32_t mtimer_cmp_hi;
 } MTIMER_RegDef;
 
-uint64_t mtimer_get_cycle(void);
+typedef void (*mtimer_callback_t)(void);
+void mtimer_delay_us(uint32_t us);
+void mtimer_delay_ms(uint32_t ms);
+uint64_t mtimer_get_time_us(void);
+uint64_t mtimer_get_time_ms(void);
+uint32_t mtimer_get_tick_count(void);
+void mtimer_config(uint32_t interval_ticks, mtimer_callback_t callback_func);
 #endif

@@ -35,10 +35,10 @@ unsigned long long rdmcycle(void)
 {
     do
     {
-        unsigned long hi = read_csr(cycleh);
-        unsigned long lo = read_csr(cycle);
+        unsigned long hi = read_csr(CSR_CYCLEH);
+        unsigned long lo = read_csr(CSR_CYCLE);
 
-        if (hi == read_csr(cycleh))
+        if (hi == read_csr(CSR_CYCLEH))
             return ((unsigned long long)hi << 32) | lo;
     } while (1);
     return 0;

@@ -56,6 +56,9 @@
 #include "swift_config.h"
 #include "mtimer.h"
 #include "csr.h"
+#include "mtimer.h"
+#include "interrupt.h"
+
 #define UART_TEST_PASS 0xABCD0000
 #define UART_TEST_FAIL 0xABCD0001
 /*-----------------------------------------------------------*/
@@ -106,10 +109,10 @@ unsigned int get_timer_freq(void) { return (unsigned int)CPUFREQ; }
 
 uint64_t get_timer_value(void) {
     do {
-        unsigned long hi = read_csr(cycleh);
-        unsigned long lo = read_csr(cycle);
+        unsigned long hi = read_csr(CSR_CYCLEH);
+        unsigned long lo = read_csr(CSR_CYCLE);
 
-        if (hi == read_csr(cycleh)) return ((uint64_t)hi << 32) | lo;
+        if (hi == read_csr(CSR_CYCLEH)) return ((uint64_t)hi << 32) | lo;
     } while (1);
 }
 
@@ -128,20 +131,29 @@ volatile void demo_test(void)
 	return;
 }
 
+void tmp_mtimer_handler(void) { xprintf("------>tmp_mtimer_handler\n"); }
+
 int main(void)
 {
 	uint8_t ret = 0;
-	demo_test();
-	coremark_main();
+    uint32_t interval_ticks = 1000;
+    demo_test();
+    // coremark_main();
+	enable_m_mode_global_interrupt();
+    mtimer_config(interval_ticks, tmp_mtimer_handler);
+    // xTaskCreate(demo_test,				  /* The function that implements the task. */
+    // 			"demo",					  /* The text name assigned to the task - for debug only as it is not used by the kernel. */
+    // 			configMINIMAL_STACK_SIZE, /* The size of the stack to allocate to the task. */
+    // 			NULL,					  /* The parameter passed to the task - not used in this case. */
+    // 			2,						  /* The priority assigned to the task. */
+    // 			NULL);					  /* The task handle is not required, so NULL is passed. */
 
-	// xTaskCreate(demo_test,				  /* The function that implements the task. */
-	// 			"demo",					  /* The text name assigned to the task - for debug only as it is not used by the kernel. */
-	// 			configMINIMAL_STACK_SIZE, /* The size of the stack to allocate to the task. */
-	// 			NULL,					  /* The parameter passed to the task - not used in this case. */
-	// 			2,						  /* The priority assigned to the task. */
-	// 			NULL);					  /* The task handle is not required, so NULL is passed. */
-
-	// vTaskStartScheduler();
+    // vTaskStartScheduler();
+	while(1) {
+		if (mtimer_get_tick_count() > 20) {
+            break;
+        }
+    }
 	__exit__(ret);
 	for (;;)
 		;

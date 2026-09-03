@@ -28,6 +28,7 @@ module csr_reg(
     input ex_int,
     input mtimer_int,
     input mret_occurred,
+    input [`REG_WIDTH - 1: 0]cur_pc_pipe2,
     // output
     output global_int_en,
     output mtimer_int_en,
@@ -66,29 +67,29 @@ module csr_reg(
     assign csr_mepc_data = mepc;
 
     // exception start
-    always@(posedge clk or negedge rst_n) begin
+    always@(*) begin
         if (ebreak_except) begin
-            mcause = {{1{1'b0}}, {20{1'b0}}, `EXCEPTION_CODE_BREAKPOINT};
+            mcause = {{`EXCEPTION_BIT}, {(`REG_WIDTH - `EXCEPTION_CODE_WIDTH - 1){1'b0}}, `EXCEPTION_CODE_BREAKPOINT};
             mstatus[MPIE_BIT] = mstatus_mie;
             mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
             mstatus[MIE_BIT] = 1'b0;
         end else if(ecall_except) begin
-            mcause = {{1{1'b0}}, {20{1'b0}}, `EXCEPTION_CODE_ECALL_M_MODE};
+            mcause = {{`EXCEPTION_BIT}, {(`REG_WIDTH - `EXCEPTION_CODE_WIDTH - 1){1'b0}}, `EXCEPTION_CODE_ECALL_M_MODE};
             mstatus[MPIE_BIT] = mstatus_mie;
             mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
             mstatus[MIE_BIT] = 1'b0;
         end else if(instruction_decode_err) begin
-            mcause = {{1{1'b0}}, {20{1'b0}}, `EXCEPTION_CODE_ILLEGAL_INSTRUCTION};
+            mcause = {{`EXCEPTION_BIT}, {(`REG_WIDTH - `EXCEPTION_CODE_WIDTH - 1){1'b0}}, `EXCEPTION_CODE_ILLEGAL_INSTRUCTION};
             mstatus[MPIE_BIT] = mstatus_mie;
             mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
             mstatus[MIE_BIT] = 1'b0;
-        end else if(global_int_en && ex_int_en && ex_int) begin
-            mcause = {{1{1'b1}}, {20{1'b0}}, `EXCEPTION_CODE_EXTERNAL_INT};
+        end else if(ex_int) begin
+            mcause = {{`INTERRUPT_BIT}, {(`REG_WIDTH - `EXCEPTION_CODE_WIDTH - 1){1'b0}}, `EXCEPTION_CODE_EXTERNAL_INT};
             mstatus[MPIE_BIT] = mstatus_mie;
             mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
             mstatus[MIE_BIT] = 1'b0;
-        end else if(global_int_en  && mtimer_int_en && mtimer_int) begin
-            mcause = {{1{1'b1}}, {20{1'b0}}, `EXCEPTION_CODE_MTIMER_INT};
+        end else if(mtimer_int) begin
+            mcause = {{`INTERRUPT_BIT}, {(`REG_WIDTH - `EXCEPTION_CODE_WIDTH - 1){1'b0}}, `EXCEPTION_CODE_MTIMER_INT};
             mstatus[MPIE_BIT] = mstatus_mie;
             mstatus[MPP_HI:MPP_LO] = `CPU_M_MODE;
             mstatus[MIE_BIT] = 1'b0;

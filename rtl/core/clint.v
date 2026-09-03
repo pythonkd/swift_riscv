@@ -16,23 +16,33 @@ module clint(
     input mret_occurred,
     input global_int_en,
     input ex_int_en,
-    input hold_flag,
+    input alu_stall_flag,
     input [`REG_WIDTH - 1: 0]clint_wr_addr,
     input [`REG_WIDTH - 1: 0]clint_wr_data,
     input clint_we,
     input [`INTERRUPT_MAX_NUM - 1: 0]interrupts,
+    input mtimer_int,
+    input mtimer_int_en,
+    // output
     output reg [`REG_WIDTH - 1: 0]clint_rd_data,
     output reg clint_csr_we,
     output reg [`INST_CSR_WIDTH - 1: 0]clint_csr_wr_addr,
     output reg [`REG_WIDTH - 1: 0]clint_csr_wr_data,
-    output reg clint_hold_flag,
-    output reg ex_int_process
+    output reg clint_flush_flag,
+    output reg ex_int_process,
+    output reg mtimer_int_process
 );
     localparam INTERRUPTS_EN_ADDR = 0;
 
     reg [`INTERRUPT_MAX_NUM - 1: 0]interrupts_en;
-    reg [`INT_PROCESS_STATE_WIDTH - 1]curr_state;
-    reg [`INT_PROCESS_STATE_WIDTH - 1]next_state;
+    reg [`INT_PROCESS_STATE_WIDTH - 1: 0]curr_state;
+    reg [`INT_PROCESS_STATE_WIDTH - 1: 0]next_state;
+    reg [`REG_WIDTH - 1: 0]instruction_addr_dll;
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
+            instruction_addr_dll = 0;
+        else if(instruction_addr)
+            instruction_addr_dll = instruction_addr;
 
     always @(posedge clk or negedge rst_n)
         if (!rst_n)
@@ -56,24 +66,40 @@ module clint(
             curr_state <= next_state;
 
     always @(*) begin
-        clint_csr_we = 0;
-        clint_hold_flag = 0;
-        ex_int_process = 0;
+               
         case (curr_state)
             `INT_PROCESS_STATE_END: begin
-                if(global_int_en && ex_int_en && (|(interrupts & interrupts_en)) && (!hold_flag)) begin
+                if(global_int_en && ex_int_en && (|(interrupts & interrupts_en)) && (!alu_stall_flag)) begin
                     next_state      = `INT_PROCESS_STATE_START;
                     clint_csr_wr_addr   = `CSR_MEPC;
-                    clint_csr_wr_data   = instruction_addr;
+                    clint_csr_wr_data   = instruction_addr_dll;
                     clint_csr_we    = 1'b1;
-                    clint_hold_flag = 1'b1;
+                    clint_flush_flag = 1'b1;
                     ex_int_process  = 1'b1;
+                end else if(global_int_en && mtimer_int_en && mtimer_int && (!alu_stall_flag)) begin
+                    next_state      = `INT_PROCESS_STATE_START;
+                    clint_csr_wr_addr   = `CSR_MEPC;
+                    clint_csr_wr_data   = instruction_addr_dll;
+                    clint_csr_we    = 1'b1;
+                    clint_flush_flag = 1'b1;
+                    mtimer_int_process  = 1'b1;
                 end
             end
             `INT_PROCESS_STATE_START: begin
                 if(mret_occurred) begin
                     next_state = `INT_PROCESS_STATE_END;
                 end
+                clint_flush_flag = 1'b0;
+                ex_int_process = 1'b0;
+                mtimer_int_process = 1'b0;
+                clint_csr_we = 0; 
+            end
+            default: begin
+                next_state = `INT_PROCESS_STATE_END;
+                ex_int_process = 0;
+                mtimer_int_process = 0;
+                clint_csr_we = 0;
+                clint_flush_flag = 1'b0;
             end
         endcase
     end

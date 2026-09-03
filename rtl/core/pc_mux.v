@@ -31,6 +31,8 @@ module pc_mux(
     always @(*) begin
         if (flush_cpu && predict_jump_en_pipe2 && !jump_en)
             nx_pc = cur_pc2 + 32'h4;
+        else if(exception)
+            nx_pc = csr_mtvec;
         else if (jump_en&& !predict_jump_en_pipe2) begin
             case(jump)
                 `INST_JUMP_JAL: nx_pc = cur_pc2 + imm;
@@ -38,9 +40,7 @@ module pc_mux(
                 `INST_JUMP_B: nx_pc = cur_pc2 + imm;
                 default: nx_pc = cur_pc0 + `REG_WIDTH'h4;
             endcase
-        end else if(exception)
-            nx_pc = csr_mtvec;
-        else if (mret_jump)
+        end else if (mret_jump)
             nx_pc = csr_mepc;
         else if (predict_jump_en)
             nx_pc = predict_pc;

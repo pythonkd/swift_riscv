@@ -26,8 +26,8 @@ module addr_mux(
     output cpu_wr_dlm_en,
     output cpu_wr_ilm_en,
     output cpu_wr_external_en,
-    output reg cpu_wr_mtimer_en,
-    output reg cpu_wr_clint_en,
+    output cpu_wr_mtimer_en,
+    output cpu_wr_clint_en,
     output bus_stall_cpu,
     output bus_stall_if,
     output instruction_valid,
@@ -43,10 +43,10 @@ module addr_mux(
     output reg [`REG_WIDTH - 1: 0]cpu_to_dlm_data,
     output [`REG_WIDTH - 1: 0]cpu_to_external_addr,
     output [`REG_WIDTH - 1: 0]cpu_to_external_data,
-    output reg[`REG_WIDTH - 1: 0]cpu_to_mtimer_addr,
-    output reg[`REG_WIDTH - 1: 0]cpu_to_mtimer_data,
-    output reg[`REG_WIDTH - 1: 0]cpu_to_clint_addr,
-    output reg[`REG_WIDTH - 1: 0]cpu_to_clint_data
+    output [`REG_WIDTH - 1: 0]cpu_to_mtimer_addr,
+    output [`REG_WIDTH - 1: 0]cpu_to_mtimer_data,
+    output [`REG_WIDTH - 1: 0]cpu_to_clint_addr,
+    output [`REG_WIDTH - 1: 0]cpu_to_clint_data
 );
     wire mem_need_external;
     wire if_need_external;
@@ -76,11 +76,20 @@ module addr_mux(
             instruction = ilm_to_cpu_inst_data;
         end
     end
-
+    // cpu --> ilm
     assign cpu_wr_ilm_en = mem_req_valid && (~mem_need_external) && (mem_addr < `ILM_END_ADDR) ? data_we : 0;
-    assign cpu_wr_dlm_en = mem_req_valid && (~mem_need_external) && (mem_addr < `DLM_END_ADDR) ? data_we : 0;
-    assign cpu_to_dlm_strb = mem_req_valid && (~mem_need_external) && (mem_addr < `DLM_END_ADDR) ? mem_strb : `STRB_WIDTH'b1111;
+    assign cpu_wr_dlm_en = mem_req_valid && (~mem_need_external) && (mem_addr >= `ILM_END_ADDR) && (mem_addr < `DLM_END_ADDR) ? data_we : 0;
+    assign cpu_to_dlm_strb = mem_req_valid && (~mem_need_external) && (mem_addr >= `ILM_END_ADDR) && (mem_addr < `DLM_END_ADDR)  ? mem_strb : `STRB_WIDTH'b1111;
     
+    // cpu -> mtimer
+    assign cpu_wr_mtimer_en = (mem_addr >= `DLM_END_ADDR) && (mem_addr < `MTIMER_END_ADDR) ? data_we : 0;
+    assign cpu_to_mtimer_addr = (mem_addr >= `DLM_END_ADDR) && (mem_addr < `MTIMER_END_ADDR) ? mem_addr - `MTIMER_ADDR_BASE: 0;
+    assign cpu_to_mtimer_data = (mem_addr >= `DLM_END_ADDR) && (mem_addr < `MTIMER_END_ADDR) ? mem_wr_data: 0;
+    // cpu -> clint
+    assign cpu_wr_clint_en = (mem_addr >= `MTIMER_END_ADDR) && (mem_addr < `CLINT_END_ADDR) ? data_we : 0;
+    assign cpu_to_clint_addr = (mem_addr >= `MTIMER_END_ADDR) && (mem_addr < `CLINT_END_ADDR) ? mem_addr - `CLINT_ADDR_BASE: 0;
+    assign cpu_to_clint_data = (mem_addr >= `MTIMER_END_ADDR) && (mem_addr < `CLINT_END_ADDR) ? mem_wr_data: 0;
+
     always @(*) begin
         if (mem_req_valid && (~mem_need_external)) begin
             if (mem_addr < `ILM_END_ADDR) begin
@@ -95,14 +104,8 @@ module addr_mux(
                 cpu_to_dlm_data = mem_wr_data;
                 mem_rd_data = dlm_to_cpu_data;
             end else if(mem_addr < `MTIMER_END_ADDR) begin
-                cpu_to_mtimer_addr = mem_addr - `MTIMER_ADDR_BASE;
-                cpu_wr_mtimer_en = data_we;
-                cpu_to_mtimer_data = mem_wr_data;
                 mem_rd_data = mtimer_to_cpu_data;
             end else if(mem_addr < `CLINT_END_ADDR) begin
-                cpu_to_clint_addr = mem_addr - `CLINT_ADDR_BASE;
-                cpu_wr_clint_en = data_we;
-                cpu_to_clint_data = mem_wr_data;
                 mem_rd_data = clint_to_cpu_data;
             end
         end
