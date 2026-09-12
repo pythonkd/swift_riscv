@@ -10,6 +10,8 @@
  */
 
 module addr_mux(
+    input clk,
+    input rst_n,
     input extern_data_ready,
     input [`REG_WIDTH - 1: 0]instruction_addr,
     input mem_req_valid,
@@ -32,15 +34,15 @@ module addr_mux(
     output bus_stall_if,
     output instruction_valid,
     output mem_rd_valid,
-    output reg [`REG_WIDTH - 1: 0]instruction,
-    output reg [`REG_WIDTH - 1:0]mem_rd_data,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_inst_addr,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_mem_addr,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_wr_addr,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_ilm_data,
+    output [`REG_WIDTH - 1: 0]instruction,
+    output [`REG_WIDTH - 1:0]mem_rd_data,
+    output [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_inst_addr,
+    output [`REG_WIDTH - 1: 0]cpu_to_ilm_rd_mem_addr,
+    output [`REG_WIDTH - 1: 0]cpu_to_ilm_wr_addr,
+    output [`REG_WIDTH - 1: 0]cpu_to_ilm_data,
     output [`STRB_WIDTH - 1: 0]cpu_to_dlm_strb,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_dlm_addr,
-    output reg [`REG_WIDTH - 1: 0]cpu_to_dlm_data,
+    output [`REG_WIDTH - 1: 0]cpu_to_dlm_addr,
+    output [`REG_WIDTH - 1: 0]cpu_to_dlm_data,
     output [`REG_WIDTH - 1: 0]cpu_to_external_addr,
     output [`REG_WIDTH - 1: 0]cpu_to_external_data,
     output [`REG_WIDTH - 1: 0]cpu_to_mtimer_addr,
@@ -65,50 +67,46 @@ module addr_mux(
     assign cpu_to_external_addr = external_grant_mem ? mem_addr :
                                     if_need_external ? instruction_addr : {`REG_WIDTH{1'b0}};
     assign cpu_to_external_data = external_grant_mem ? mem_wr_data : {`REG_WIDTH{1'b0}};
-    
-    always @(*) begin
-        if (external_grant_mem) begin
-            mem_rd_data = external_to_cpu_rd_data;
-        end else if(if_need_external) begin
-            instruction = external_to_cpu_rd_data;
-        end else begin
-            cpu_to_ilm_rd_inst_addr = instruction_addr;
-            instruction = ilm_to_cpu_inst_data;
-        end
-    end
-    // cpu --> ilm
-    assign cpu_wr_ilm_en = mem_req_valid && (~mem_need_external) && (mem_addr < `ILM_END_ADDR) ? data_we : 0;
-    assign cpu_wr_dlm_en = mem_req_valid && (~mem_need_external) && (mem_addr >= `ILM_END_ADDR) && (mem_addr < `DLM_END_ADDR) ? data_we : 0;
-    assign cpu_to_dlm_strb = mem_req_valid && (~mem_need_external) && (mem_addr >= `ILM_END_ADDR) && (mem_addr < `DLM_END_ADDR)  ? mem_strb : `STRB_WIDTH'b1111;
-    
-    // cpu -> mtimer
-    assign cpu_wr_mtimer_en = (mem_addr >= `DLM_END_ADDR) && (mem_addr < `MTIMER_END_ADDR) ? data_we : 0;
-    assign cpu_to_mtimer_addr = (mem_addr >= `DLM_END_ADDR) && (mem_addr < `MTIMER_END_ADDR) ? mem_addr - `MTIMER_ADDR_BASE: 0;
-    assign cpu_to_mtimer_data = (mem_addr >= `DLM_END_ADDR) && (mem_addr < `MTIMER_END_ADDR) ? mem_wr_data: 0;
-    // cpu -> clint
-    assign cpu_wr_clint_en = (mem_addr >= `MTIMER_END_ADDR) && (mem_addr < `CLINT_END_ADDR) ? data_we : 0;
-    assign cpu_to_clint_addr = (mem_addr >= `MTIMER_END_ADDR) && (mem_addr < `CLINT_END_ADDR) ? mem_addr - `CLINT_ADDR_BASE: 0;
-    assign cpu_to_clint_data = (mem_addr >= `MTIMER_END_ADDR) && (mem_addr < `CLINT_END_ADDR) ? mem_wr_data: 0;
 
-    always @(*) begin
-        if (mem_req_valid && (~mem_need_external)) begin
-            if (mem_addr < `ILM_END_ADDR) begin
-                if (data_we)
-                    cpu_to_ilm_wr_addr = mem_addr - `ILM_ADDR_BASE;
-                else
-                    cpu_to_ilm_rd_mem_addr = mem_addr - `ILM_ADDR_BASE;
-                cpu_to_ilm_data = mem_wr_data;
-                mem_rd_data = ilm_to_cpu_mem_data;
-            end else if(mem_addr < `DLM_END_ADDR) begin
-                cpu_to_dlm_addr = mem_addr - `DLM_ADDR_BASE;
-                cpu_to_dlm_data = mem_wr_data;
-                mem_rd_data = dlm_to_cpu_data;
-            end else if(mem_addr < `MTIMER_END_ADDR) begin
-                mem_rd_data = mtimer_to_cpu_data;
-            end else if(mem_addr < `CLINT_END_ADDR) begin
-                mem_rd_data = clint_to_cpu_data;
-            end
-        end
-    end
+    // inst type
+    assign instruction = !external_grant_mem && if_need_external ? external_to_cpu_rd_data : ilm_to_cpu_inst_data;
+    assign cpu_to_ilm_rd_inst_addr = !external_grant_mem && !if_need_external ? instruction_addr : 0;
 
+    // mem type: cpu --> ilm
+    wire cpu_to_ilm;
+    assign cpu_to_ilm = mem_req_valid && (~mem_need_external) && (mem_addr < `ILM_END_ADDR);
+    assign cpu_wr_ilm_en = cpu_to_ilm && data_we;
+    assign cpu_to_ilm_wr_addr = cpu_wr_ilm_en ? mem_addr - `ILM_ADDR_BASE : 0;
+    assign cpu_to_ilm_rd_mem_addr = cpu_to_ilm && !data_we ? mem_addr - `ILM_ADDR_BASE : 0;
+    assign cpu_to_ilm_data = cpu_wr_ilm_en ? mem_wr_data: 0;
+
+    // mem type: cpu --> dlm
+    wire cpu_to_dlm;
+    assign cpu_to_dlm = mem_req_valid  && (mem_addr >= `ILM_END_ADDR) && (mem_addr < `DLM_END_ADDR);
+    assign cpu_wr_dlm_en = cpu_to_dlm && data_we;
+    assign cpu_to_dlm_strb = cpu_to_dlm  ? mem_strb : `STRB_WIDTH'b1111;
+    assign cpu_to_dlm_addr = cpu_to_dlm ? mem_addr - `DLM_ADDR_BASE : 0;
+    assign cpu_to_dlm_data = cpu_wr_dlm_en ? mem_wr_data : 0;
+    // mem type: cpu -> mtimer
+    wire cpu_to_mtimer;
+    assign cpu_to_mtimer = mem_req_valid && (mem_addr >= `DLM_END_ADDR) && (mem_addr < `MTIMER_END_ADDR);
+    assign cpu_wr_mtimer_en = cpu_to_mtimer && data_we;
+    assign cpu_to_mtimer_addr = cpu_to_mtimer ? mem_addr - `MTIMER_ADDR_BASE: 0;
+    assign cpu_to_mtimer_data = cpu_wr_mtimer_en ? mem_wr_data : 0;
+    // mem type: cpu -> clint
+    wire cpu_to_clint;
+    assign cpu_to_clint = mem_req_valid && (mem_addr >= `MTIMER_END_ADDR) && (mem_addr < `CLINT_END_ADDR);
+    assign cpu_wr_clint_en = cpu_to_clint && data_we;
+    assign cpu_to_clint_addr = cpu_to_clint ? mem_addr - `CLINT_ADDR_BASE: 0;
+    assign cpu_to_clint_data = cpu_wr_clint_en ? mem_wr_data: 0;
+
+    assign mem_rd_data = external_grant_mem ? external_to_cpu_rd_data:
+                cpu_to_ilm ? ilm_to_cpu_mem_data:
+                cpu_to_dlm ? dlm_to_cpu_data:
+                cpu_to_mtimer ? mtimer_to_cpu_data:
+                cpu_to_clint ? clint_to_cpu_data: 0;
+
+    // cache u_dcache(
+
+    // );
 endmodule
