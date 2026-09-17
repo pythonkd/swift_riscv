@@ -23,4 +23,4 @@
 ![pipeline](./picture/pipeline.JPG)
 
 ## COREMARK
-![coremark](./picture/cpu_coremark.png)
+![coremark](./picture/coremark.jpg)
