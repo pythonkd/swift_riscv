@@ -1,65 +1,71 @@
 module ras_stack
 #(
-    parameter DEPTH     = 8        // RAS栈深度
+    parameter DEPTH = 8                                 // RAS 深度
 )(
-    input  wire                         clk,
-    input  wire                         rst_n,
-    input  wire                         push,  // call，压入返回地址
-    input  wire                         pop,   // ret，弹出返回地址
+    input  wire                          clk,
+    input  wire                          rst_n,
+    input  wire                          push,           // call：压入返回地址
+    input  wire                          pop,            // ret ：弹出返回地址
     input  wire [`REG_WIDTH-1:0]         push_addr,
-    output reg [`REG_WIDTH-1:0]          top_addr,
-    output wire                         empty
+    output wire [`REG_WIDTH-1:0]         top_addr,
+    output wire                          empty,
+    output wire                          full
 );
 
-// 存储数组
-reg [`REG_WIDTH-1:0] ras_mem [0 : DEPTH-1];
-reg [$clog2(DEPTH) - 1 : 0] sp_index;
-reg [`REG_WIDTH - 1:0] tail_addr;
+    // 指针需要表示 0 ~ DEPTH，共 DEPTH+1 个状态
+    localparam PW = $clog2(DEPTH + 1);
 
-assign empty = (sp_index == 0);
-assign full  = (sp_index == DEPTH);
+    reg [`REG_WIDTH-1:0] ras_mem [0:DEPTH-1];
+    reg [PW-1:0]         sp_index;
 
-always @(*) begin
-    if(empty) begin
-        top_addr = '0;
-    end else begin
-        top_addr = ras_mem[sp_index - 3'd1][`REG_WIDTH - 1: 0];
-    end
-end
+    // ---------- 状态指示 ----------
+    assign empty = (sp_index == {PW{1'b0}});
+    assign full  = (sp_index == DEPTH);
 
-integer i;
-always @(posedge clk or negedge rst_n) begin
-    if(!rst_n) begin
-        sp_index <= 0;
-        for(i=0; i<DEPTH; i=i+1) begin
-            ras_mem[i] <= '0;
+    // ---------- 栈顶（组合读） ----------
+    assign top_addr = empty ? {`REG_WIDTH{1'b0}}
+                            : ras_mem[sp_index - 1'b1];
+
+    // ---------- 时序更新 ----------
+    integer i;
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            sp_index <= {PW{1'b0}};
+            for (i = 0; i < DEPTH; i = i + 1)
+                ras_mem[i] <= {`REG_WIDTH{1'b0}};
         end
-    end
-    else begin
-        if(push && pop) begin
-            if(!empty) begin
-                ras_mem[sp_index - 1'd1] <= push_addr;
-            end
-        end
-        else if(pop && !push) begin
-            if(!empty) begin
-                sp_index <= sp_index - 1'd1;
-            end
-        end
-        else if(push && !pop) begin
-            if(!full) begin
-                ras_mem[sp_index] <= push_addr;
-                sp_index <= sp_index + 1'd1;
-            end
-            else begin
-                for(i=0; i < DEPTH-1; i=i+1) begin
-                    ras_mem[i] <= ras_mem[i + 1];
+        else begin
+            case ({push, pop})
+                // 只 push：非满时写入并递增
+                2'b10: begin
+                    if (!full) begin
+                        ras_mem[sp_index] <= push_addr;
+                        sp_index          <= sp_index + 1'b1;
+                    end
                 end
-                ras_mem[DEPTH - 1] <= push_addr;
-            end
+
+                // 只 pop：非空时递减
+                2'b01: begin
+                    if (!empty)
+                        sp_index <= sp_index - 1'b1;
+                end
+
+                // push 与 pop 同时：净效果是栈深度不变
+                2'b11: begin
+                    if (empty) begin
+                        // 空栈：pop 是空操作，push 生效
+                        ras_mem[sp_index] <= push_addr;
+                        sp_index          <= sp_index + 1'b1;
+                    end
+                    else begin
+                        // 非空：用新地址替换栈顶
+                        ras_mem[sp_index - 1'b1] <= push_addr;
+                    end
+                end
+
+                default: ;   // 2'b00：保持
+            endcase
         end
-        // else no op
     end
-end
 
 endmodule
