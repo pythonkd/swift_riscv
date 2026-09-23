@@ -20,6 +20,7 @@ module alu(
     input [`REG_WIDTH - 1:0] mem_rd_data,
     input mem_rd_valid,
     input predict_jump_en,
+    input [`REG_WIDTH - 1: 0]predict_jump_addr,
     output reg reg_we,
     output reg mem_we,
     output reg csr_we,
@@ -30,7 +31,7 @@ module alu(
     output reg ecall_except,
     output reg ebreak_except,
     output reg [`INST_JUMP_WIDTH - 1: 0] jump,
-    output reg [`REG_WIDTH - 1: 0] imm,
+    output reg [`REG_WIDTH - 1: 0] jump_addr,
     output reg [`REG_WIDTH - 1: 0] rd_data,
     output reg [`REG_WIDTH - 1:0] mem_wr_data,
     output reg [`REG_WIDTH - 1:0] mem_addr,
@@ -61,9 +62,9 @@ module alu(
     wire [`REG_WIDTH-1:0] div_result;
     wire div_busy;
     reg pre_ready;
-
+    reg  [`REG_WIDTH-1:0] imm;
     // 对外输出
-    assign alu_flush_flag = ecall_except || ebreak_except || mret_occurred || (jump_en != predict_jump_en);
+    assign alu_flush_flag = ecall_except || ebreak_except || mret_occurred || (jump_en != predict_jump_en) || (predict_jump_en & (jump_addr != predict_jump_addr));
     assign alu_stall_flag = div_stall_flag;
 
     // ===================================================================
@@ -117,6 +118,7 @@ module alu(
         csr_wr_addr    = {`INST_CSR_WIDTH{1'b0}};
         mem_strb = `STRB_WIDTH'b1111;
         instruction_decode_err = 0;
+        jump_addr = 'b0;
         // ---------- 根据 opcode 译码 ----------
         case (opcode)
 
@@ -253,6 +255,7 @@ module alu(
             `INST_OPCODE_B_TYPE: begin
                 jump = `INST_JUMP_B;
                 imm = {{20{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+                jump_addr = instruction_addr + {{20{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0};
                 case (func3)
                     `INST_OPCODE_B_BEQ:  jump_en = (rs1_data == rs2_data);
                     `INST_OPCODE_B_BNE:  jump_en = (rs1_data != rs2_data);
@@ -262,9 +265,6 @@ module alu(
                     `INST_OPCODE_B_BGEU: jump_en = (rs1_data >= rs2_data);
                     default: ;
                 endcase
-                if((predict_jump_en == 1'b1) && (jump_en == 1'b1)) begin
-                    imm = {{20{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0} + 32'h8;
-                end
             end
 
             // ------------------------------------------------------------
@@ -276,6 +276,7 @@ module alu(
                 jump    = `INST_JUMP_JAL;
                 imm     = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
                 rd_data = instruction_addr + `REG_WIDTH'h4;
+                jump_addr = instruction_addr + {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
             end
 
             // ------------------------------------------------------------
@@ -287,6 +288,7 @@ module alu(
                 jump    = `INST_JUMP_JALR;
                 imm     = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
                 rd_data = instruction_addr + `REG_WIDTH'h4;
+                jump_addr = rs1_data + {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
             end
 
             // ------------------------------------------------------------

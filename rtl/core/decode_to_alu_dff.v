@@ -23,6 +23,7 @@
     input [`REG_WIDTH - 1: 0]csr_rd_data_pipe1,
     input [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe1,
     input predict_jump_en_pipe1,
+    input [`REG_WIDTH -1: 0]predict_jump_addr_pipe1,
 
     output [`REG_WIDTH - 1: 0]rs1_data_pipe2,
     output [`REG_WIDTH - 1: 0]rs2_data_pipe2,
@@ -32,9 +33,21 @@
     output [`REG_WIDTH - 1: 0]cur_pc_pipe2,
     output [`REG_WIDTH - 1: 0]csr_rd_data_pipe2,
     output [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe2,
-    output predict_jump_en_pipe2
-    
+    output predict_jump_en_pipe2,
+    output [`REG_WIDTH -1: 0]predict_jump_addr_pipe2
  );
+    gen_stall_flush_default_dff #(
+        .DW(32),
+        .STAGS(1)
+    ) u_decode_to_alu_predict_jump_addr(
+        .clk(clk),
+        .rst_n(rst_n),
+        .flush_en(flush_flag),
+        .stall_en(stall_flag),
+        .din(predict_jump_addr_pipe1),
+        .dout(predict_jump_addr_pipe2)
+    );
+
     gen_stall_flush_default_dff #(
         .DW(1),
         .STAGS(1)

@@ -60,7 +60,7 @@ module core_top (
     wire instruction_valid_pipe0;
     wire instruction_valid_pipe1;
     wire instruction_valid_pipe2;
-    wire [`REG_WIDTH - 1: 0]imm_pipe2;
+    wire [`REG_WIDTH - 1: 0]jump_addr_pipe2;
     wire [`INST_RS1_WIDTH  - 1: 0]rs1_index_pipe1;
     wire [`INST_RS1_WIDTH  - 1: 0]rs2_index_pipe1;
     wire [`REG_WIDTH - 1: 0]rs1_data_pipe1;
@@ -125,7 +125,15 @@ module core_top (
     wire predict_jump_en_pipe0;
     wire predict_jump_en_pipe1;
     wire predict_jump_en_pipe2;
-    wire [`REG_WIDTH -1 : 0]predict_pc;
+    wire [`REG_WIDTH -1 : 0]predict_jump_addr_pipe0;
+    wire [`REG_WIDTH -1 : 0]predict_jump_addr_pipe1;
+    wire [`REG_WIDTH -1 : 0]predict_jump_addr_pipe2;
+    wire ras_push;
+    wire ras_pop;
+    wire [`REG_WIDTH - 1 : 0]ras_push_addr;
+    wire [`REG_WIDTH - 1: 0]ras_top_addr;
+    wire ras_empty;
+
     assign sync_except = instruction_err || instruction_decode_err || ebreak_except || ecall_except || data_err;
     assign async_except = ex_int_process || mtimer_int_process;
     assign exception = sync_except || async_except;
@@ -149,19 +157,23 @@ module core_top (
     predict u_predict(
         // input
         .instruction(instruction_pipe0),
+        .instruction_addr(cur_pc_pipe0),
         .instruction_valid(instruction_valid_pipe0),
         .current_pc(cur_pc_pipe0),
+        .ras_top_addr(ras_top_addr),
         // output
+        .ras_push(ras_push),
+        .ras_push_addr(ras_push_addr),
+        .ras_pop(ras_pop),
         .predict_jump_en(predict_jump_en_pipe0),
-        .predict_pc(predict_pc)
+        .predict_jump_addr(predict_jump_addr_pipe0)
     );
 
     pc_mux u_pc_mux(
         // input
         .cur_pc0(cur_pc_pipe0),
         .cur_pc2(cur_pc_pipe2),
-        .imm(imm_pipe2),
-        .rs1_data(rs1_data_pipe2),
+        .jump_addr(jump_addr_pipe2),
         .jump(jump_pipe2),
         .jump_en(jump_en_pipe2),
         .flush_cpu(flush_cpu),
@@ -171,8 +183,9 @@ module core_top (
         .exception(exception),
         .mret_jump(mret_jump),
         .predict_jump_en_pipe2(predict_jump_en_pipe2),
+        .predict_jump_addr_pipe2(predict_jump_addr_pipe2),
         .predict_jump_en(predict_jump_en_pipe0),
-        .predict_pc(predict_pc),
+        .predict_jump_addr(predict_jump_addr_pipe0),
         //output
         .nx_pc(nx_pc)
     );
@@ -229,12 +242,14 @@ module core_top (
         .cur_pc_pipe0(cur_pc_pipe0),
         .ex_int_src_pipe0(ex_int_src_pipe0),
         .predict_jump_en_pipe0(predict_jump_en_pipe0),
+        .predict_jump_addr_pipe0(predict_jump_addr_pipe0),
         // output
         .ex_int_src_pipe1(ex_int_src_pipe1),
         .instruction_valid_pipe1(instruction_valid_pipe1),
         .instruction_pipe1(instruction_pipe1),
         .cur_pc_pipe1(cur_pc_pipe1),
-        .predict_jump_en_pipe1(predict_jump_en_pipe1)
+        .predict_jump_en_pipe1(predict_jump_en_pipe1),
+        .predict_jump_addr_pipe1(predict_jump_addr_pipe1)
     );
 
     decode u_decode(
@@ -263,6 +278,7 @@ module core_top (
         .csr_rd_data_pipe1(csr_rd_data_pipe1),
         .ex_int_src_pipe1(ex_int_src_pipe1),
         .predict_jump_en_pipe1(predict_jump_en_pipe1),
+        .predict_jump_addr_pipe1(predict_jump_addr_pipe1),
         // output
         .rs1_data_pipe2(rs1_data_pipe2),
         .rs2_data_pipe2(rs2_data_pipe2),
@@ -272,7 +288,8 @@ module core_top (
         .cur_pc_pipe2(cur_pc_pipe2),
         .csr_rd_data_pipe2(csr_rd_data_pipe2),
         .ex_int_src_pipe2(ex_int_src_pipe2),
-        .predict_jump_en_pipe2(predict_jump_en_pipe2)
+        .predict_jump_en_pipe2(predict_jump_en_pipe2),
+        .predict_jump_addr_pipe2(predict_jump_addr_pipe2)
     );
 
     alu u_alu(
@@ -287,6 +304,7 @@ module core_top (
         .mem_rd_valid(mem_rd_valid),
         .mem_rd_data(alu_mem_rd_data),
         .predict_jump_en(predict_jump_en_pipe2),
+        .predict_jump_addr(predict_jump_addr_pipe2),
         //output
         .reg_we(alu_reg_we),
         .mem_we(alu_mem_we),
@@ -298,7 +316,7 @@ module core_top (
         .ecall_except(ecall_except),
         .ebreak_except(ebreak_except),
         .jump(jump_pipe2),
-        .imm(imm_pipe2),
+        .jump_addr(jump_addr_pipe2),
         .rd_data(rd_data_pipe2),
         .mem_wr_data(alu_mem_wr_data),
         .mem_addr(alu_mem_addr),
@@ -339,7 +357,6 @@ module core_top (
         .clint_rd_data(clint_rd_data),
         .csr_mtvec_data(csr_mtvec),
         .csr_mepc_data(csr_mepc)
-        
     );
 
     int_switch u_int_switch(
@@ -401,7 +418,6 @@ module core_top (
         .cpu_to_mtimer_data(cpu_to_mtimer_data),
         .cpu_to_clint_addr(cpu_to_clint_addr),
         .cpu_to_clint_data(cpu_to_clint_data)
-        
     );
 
     cpu_to_bus u_cpu_to_bus(
@@ -447,4 +463,19 @@ module core_top (
         .ex_int_process(ex_int_process),
         .mtimer_int_process(mtimer_int_process)
     );
+
+    ras_stack #(
+        .DEPTH(8)
+    ) u_ras_stack(
+        // input
+        .clk(clk),
+        .rst_n(rst_n),
+        .push(ras_push),
+        .pop(ras_pop),
+        .push_addr(ras_push_addr),
+        // output
+        .top_addr(ras_top_addr),
+        .empty(ras_empty)
+    );
+
 endmodule

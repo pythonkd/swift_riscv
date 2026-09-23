@@ -18,12 +18,25 @@ module if_to_decode_dff(
     input flush_flag,
     input stall_flag,
     input predict_jump_en_pipe0,
+    input [`REG_WIDTH -1: 0]predict_jump_addr_pipe0,
     output [`INTERRUPT_MAX_NUM - 1: 0]ex_int_src_pipe1,
     output instruction_valid_pipe1,
     output [`REG_WIDTH - 1: 0]instruction_pipe1,
     output [`REG_WIDTH - 1: 0]cur_pc_pipe1,
-    output predict_jump_en_pipe1
+    output predict_jump_en_pipe1,
+    output [`REG_WIDTH -1: 0]predict_jump_addr_pipe1
 );
+    gen_stall_flush_default_dff #(
+        .DW(32),
+        .STAGS(1)
+    ) u_pc_to_decode_predict_jump_addr(
+        .clk(clk),
+        .rst_n(rst_n),
+        .flush_en(flush_flag),
+        .stall_en(stall_flag),
+        .din(predict_jump_addr_pipe0),
+        .dout(predict_jump_addr_pipe1)
+    );
     gen_stall_flush_default_dff #(
         .DW(1),
         .STAGS(1)
