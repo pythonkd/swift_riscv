@@ -43,7 +43,10 @@
 
 ## 3. make run_freertos
 
-![pipeline](./picture/pipeline.JPG)
-
 ## COREMARK
 ![coremark](./picture/coremark.jpg)
+
+## 架构
+![全局架构](./picture/all.jpg)
+![core架构](./picture/local_core.jpg)
+![pipeline](./picture/pipeline.JPG)
