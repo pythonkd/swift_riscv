@@ -48,5 +48,5 @@
 
 ## 架构
 ![全局架构](./picture/all.jpg)
-![core架构](./picture/local_core.jpg)
+![core架构](./picture/local_core.png)
 ![pipeline](./picture/pipeline.JPG)
