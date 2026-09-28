@@ -10,6 +10,7 @@
  */
 
 module predict(
+    input predict_taken,
     input [`INST_WIDTH - 1: 0]instruction,
     input [`REG_WIDTH -1: 0]instruction_addr,
     input instruction_valid,
@@ -36,10 +37,14 @@ module predict(
             case(opcode)
                 `INST_OPCODE_B_TYPE: begin
                     imm = {{20{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0};
+                    // 静态分支预测
                     if (imm[31]) begin
                         predict_jump_addr = current_pc + imm;
                         predict_jump_en = 1'b1;
                     end
+                    // 动态分支预测 gshare
+                    // predict_jump_addr = current_pc + imm;
+                    // predict_jump_en = predict_taken;
                 end
                 `INST_OPCODE_JAL_TYPE: begin
                     predict_jump_en = 1'b1;

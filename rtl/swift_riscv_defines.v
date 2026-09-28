@@ -19,8 +19,8 @@
 `define INST_JUMP_B `INST_JUMP_WIDTH'b11
 
 `define INST_WIDTH 32
-`define INST_MEM_DEPTH 24576 //(96k = 24k * 1024 * 4)
-`define INST_MEM_WIDTH 17 // 2^10=1024
+`define INST_MEM_DEPTH 4096 //(8k = (4 * 1024) * 4)
+`define INST_MEM_WIDTH 16 // 2^10=1024
 
 `define REG_DATA_DEPTH 32
 `define DATA_MEM_DEPTH 4096
@@ -243,3 +243,5 @@
 `define X0_INDEX `INST_RD_WIDTH'd0
 `define RA_INDEX `INST_RD_WIDTH'd1
 `define X5_INDEX `INST_RD_WIDTH'd5
+
+`define GSHARE_WIDTH 10

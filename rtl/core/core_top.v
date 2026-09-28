@@ -133,6 +133,8 @@ module core_top (
     wire [`REG_WIDTH - 1 : 0]ras_push_addr;
     wire [`REG_WIDTH - 1: 0]ras_top_addr;
     wire ras_empty;
+    wire update_gshare;
+    wire predict_taken;
 
     assign sync_except = instruction_err || instruction_decode_err || ebreak_except || ecall_except || data_err;
     assign async_except = ex_int_process || mtimer_int_process;
@@ -156,6 +158,7 @@ module core_top (
 
     predict u_predict(
         // input
+        .predict_taken(predict_taken),
         .instruction(instruction_pipe0),
         .instruction_addr(cur_pc_pipe0),
         .instruction_valid(instruction_valid_pipe0),
@@ -189,7 +192,7 @@ module core_top (
         //output
         .nx_pc(nx_pc)
     );
-    
+
     i_lm u_ilm(
         //input
         .clk(clk),
@@ -306,6 +309,7 @@ module core_top (
         .predict_jump_en(predict_jump_en_pipe2),
         .predict_jump_addr(predict_jump_addr_pipe2),
         //output
+        .update_gshare(update_gshare),
         .reg_we(alu_reg_we),
         .mem_we(alu_mem_we),
         .csr_we(alu_csr_we),
@@ -372,7 +376,7 @@ module core_top (
         .rst_n(rst_n),
         .mtimer_addr(cpu_to_mtimer_addr),
         .mtimer_wr_data(cpu_to_mtimer_data),
-        .mtimer_we(cpu_wr_mtimer_en),        
+        .mtimer_we(cpu_wr_mtimer_en),
         // output
         .mtimer_rd_data(mtimer_to_cpu_data),
         .mtimer_int(mtimer_int)
@@ -476,6 +480,16 @@ module core_top (
         // output
         .top_addr(ras_top_addr),
         .empty(ras_empty)
+    );
+
+    gshare #(.DW(`GSHARE_WIDTH)) u_gshare(
+        .clk(clk),
+        .rst_n(rst_n),
+        .update(update_gshare),
+        .read_index(cur_pc_pipe0[`GSHARE_WIDTH + 3 -1: 3]),
+        .write_index(cur_pc_pipe2[`GSHARE_WIDTH + 3 -1: 3]),
+        .taken(jump_en_pipe2),
+        .predict_taken(predict_taken)
     );
 
 endmodule

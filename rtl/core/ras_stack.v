@@ -8,8 +8,7 @@ module ras_stack
     input  wire                          pop,            // ret ：弹出返回地址
     input  wire [`REG_WIDTH-1:0]         push_addr,
     output wire [`REG_WIDTH-1:0]         top_addr,
-    output wire                          empty,
-    output wire                          full
+    output wire                          empty
 );
 
     // 指针需要表示 0 ~ DEPTH，共 DEPTH+1 个状态

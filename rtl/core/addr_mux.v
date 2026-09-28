@@ -10,8 +10,6 @@
  */
 
 module addr_mux(
-    input clk,
-    input rst_n,
     input extern_data_ready,
     input [`REG_WIDTH - 1: 0]instruction_addr,
     input mem_req_valid,
@@ -60,7 +58,7 @@ module addr_mux(
 
     assign bus_stall_cpu = (if_need_external && ~extern_data_ready);
     assign bus_stall_if = mem_need_external;
-    assign instruction_valid = if_need_external ? extern_data_ready: 1'b1;
+    assign instruction_valid = external_grant_mem ? 0 : if_need_external ? extern_data_ready: 1'b1;
     assign mem_rd_valid = mem_need_external && (~data_we) ? extern_data_ready: 1'b1;
 
     assign cpu_wr_external_en = external_grant_mem ? data_we : 1'b0;
@@ -69,7 +67,7 @@ module addr_mux(
     assign cpu_to_external_data = external_grant_mem ? mem_wr_data : {`REG_WIDTH{1'b0}};
 
     // inst type
-    assign instruction = !external_grant_mem && if_need_external ? external_to_cpu_rd_data : ilm_to_cpu_inst_data;
+    assign instruction = external_grant_mem ? 0 : if_need_external ? external_to_cpu_rd_data : ilm_to_cpu_inst_data;
     assign cpu_to_ilm_rd_inst_addr = !external_grant_mem && !if_need_external ? instruction_addr : 0;
 
     // mem type: cpu --> ilm

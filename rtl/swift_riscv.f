@@ -14,6 +14,8 @@ $ROOT_PATH/rtl/core/decode_ctrl.v
 $ROOT_PATH/rtl/core/alu.v
 $ROOT_PATH/rtl/core/div.v
 $ROOT_PATH/rtl/core/mul.v
+$ROOT_PATH/rtl/core/gshare.v
+$ROOT_PATH/rtl/core/saturating_counter.v
 $ROOT_PATH/rtl/core/clint.v
 $ROOT_PATH/rtl/core/instruction_lm.v
 $ROOT_PATH/rtl/core/data_lm.v

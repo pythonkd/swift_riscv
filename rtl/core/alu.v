@@ -21,6 +21,7 @@ module alu(
     input mem_rd_valid,
     input predict_jump_en,
     input [`REG_WIDTH - 1: 0]predict_jump_addr,
+    output reg update_gshare,
     output reg reg_we,
     output reg mem_we,
     output reg csr_we,
@@ -61,12 +62,15 @@ module alu(
     reg  [1:0] div_op;
     wire [`REG_WIDTH-1:0] div_result;
     wire div_busy;
+    wire predict_dir_fail;
+    wire predict_addr_fail;
     reg pre_ready;
     reg  [`REG_WIDTH-1:0] imm;
     // 对外输出
     assign alu_flush_flag = ecall_except || ebreak_except || mret_occurred || (jump_en != predict_jump_en) || (predict_jump_en & (jump_addr != predict_jump_addr));
     assign alu_stall_flag = div_stall_flag;
-
+    assign predict_dir_fail = (opcode == `INST_OPCODE_B_TYPE) && (jump_en != predict_jump_en);
+    assign predict_addr_fail = (opcode == `INST_OPCODE_B_TYPE) && (jump_en == predict_jump_en) & (predict_jump_en) & (jump_addr != predict_jump_addr);
     // ===================================================================
     // 乘法器实例
     // ===================================================================
@@ -119,6 +123,7 @@ module alu(
         mem_strb = `STRB_WIDTH'b1111;
         instruction_decode_err = 0;
         jump_addr = 'b0;
+        update_gshare = 1'b0;
         // ---------- 根据 opcode 译码 ----------
         case (opcode)
 
@@ -254,6 +259,7 @@ module alu(
             // ------------------------------------------------------------
             `INST_OPCODE_B_TYPE: begin
                 jump = `INST_JUMP_B;
+                update_gshare = 1'b1;
                 imm = {{20{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0};
                 jump_addr = instruction_addr + {{20{instruction[31]}}, instruction[31], instruction[7], instruction[30:25], instruction[11:8], 1'b0};
                 case (func3)
@@ -273,6 +279,7 @@ module alu(
             `INST_OPCODE_JAL_TYPE: begin
                 reg_we  = 1'b1;
                 jump_en = 1'b1;
+                update_gshare = 1'b1;
                 jump    = `INST_JUMP_JAL;
                 imm     = {{12{instruction[31]}}, instruction[19:12], instruction[20], instruction[30:21], 1'b0};
                 rd_data = instruction_addr + `REG_WIDTH'h4;
@@ -285,6 +292,7 @@ module alu(
             `INST_OPCODE_JALR_TYPE: begin
                 reg_we  = 1'b1;
                 jump_en = 1'b1;
+                update_gshare = 1'b1;
                 jump    = `INST_JUMP_JALR;
                 imm     = {{(`REG_WIDTH-`INST_FUNC7_WIDTH-`INST_RS2_WIDTH){func7[`INST_FUNC7_WIDTH - 1]}}, func7, rs2};
                 rd_data = instruction_addr + `REG_WIDTH'h4;
