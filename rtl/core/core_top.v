@@ -113,7 +113,7 @@ module core_top (
     wire [`STRB_WIDTH - 1: 0]mem_strb;
     wire [`STRB_WIDTH - 1: 0]cpu_to_dlm_strb;
     wire extern_data_ready;
-    wire bus_stall_if;
+    wire bus_stall_ex;
     wire bus_stall_cpu;
     wire hold_cpu;
     wire flush_cpu;
@@ -135,16 +135,17 @@ module core_top (
     wire ras_empty;
     wire update_gshare;
     wire predict_taken;
+    wire ex_bus_idle;
 
     assign sync_except = instruction_err || instruction_decode_err || ebreak_except || ecall_except || data_err;
     assign async_except = ex_int_process || mtimer_int_process;
     assign exception = sync_except || async_except;
     assign decode_flush_flag = alu_flush_flag || clint_flush_flag || exception;
-    assign decode_stall_flag = alu_stall_flag || bus_stall_cpu;
+    assign decode_stall_flag = alu_stall_flag || bus_stall_cpu || bus_stall_ex;
 
     assign if_flush_flag = decode_flush_flag;
-    assign if_stall_flag = decode_stall_flag || bus_stall_if;
-    assign hold_cpu = stop || bus_stall_cpu || alu_stall_flag || bus_stall_if;
+    assign if_stall_flag = alu_stall_flag || bus_stall_cpu || bus_stall_ex;
+    assign hold_cpu = stop || bus_stall_cpu || alu_stall_flag || bus_stall_ex;
     assign flush_cpu = alu_flush_flag || decode_flush_flag || if_flush_flag;
     pc_reg u_pc_reg(
         //input
@@ -384,6 +385,8 @@ module core_top (
 
     addr_mux u_addr_mux(
         // input
+        .clk(clk),
+        .rst_n(rst_n),
         .instruction_addr(cur_pc_pipe0),
         .mem_req_valid(mem_req_valid),
         .mem_strb(mem_strb),
@@ -397,8 +400,9 @@ module core_top (
         .clint_to_cpu_data(clint_to_cpu_data),
         .data_we(alu_mem_we),
         .extern_data_ready(extern_data_ready),
+        .ex_bus_idle(ex_bus_idle),
         // output
-        .bus_stall_if(bus_stall_if),
+        .bus_stall_ex(bus_stall_ex),
         .bus_stall_cpu(bus_stall_cpu),
         .cpu_wr_dlm_en(cpu_wr_dlm_en_pipe2),
         .cpu_wr_ilm_en(cpu_wr_ilm_en_pipe2),
@@ -440,6 +444,7 @@ module core_top (
         .mst_addr(mst_addr),
         .mst_wdata(mst_wdata),
         .cpu_rd_data(external_to_cpu_rd_data),
+        .ex_bus_idle(ex_bus_idle),
         .extern_data_ready(extern_data_ready)
     );
 

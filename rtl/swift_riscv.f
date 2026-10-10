@@ -19,6 +19,7 @@ $ROOT_PATH/rtl/core/saturating_counter.v
 $ROOT_PATH/rtl/core/clint.v
 $ROOT_PATH/rtl/core/instruction_lm.v
 $ROOT_PATH/rtl/core/data_lm.v
+$ROOT_PATH/rtl/core/cache.v
 $ROOT_PATH/rtl/core/int_switch.v
 $ROOT_PATH/rtl/core/cpu_to_bus.v
 $ROOT_PATH/rtl/core/addr_mux.v

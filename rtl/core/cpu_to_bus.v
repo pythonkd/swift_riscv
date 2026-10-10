@@ -23,44 +23,46 @@ module cpu_to_bus(
     output [`BUS_ADDR_WIDTH -1 : 0]mst_addr,
     output [`BUS_ADDR_DATA_WIDTH - 1: 0]mst_wdata,
     output [`BUS_ADDR_DATA_WIDTH - 1: 0]cpu_rd_data,
+    output ex_bus_idle,
     output extern_data_ready
 );
     reg [`BUS_STATE_WIDTH -1 : 0]state;
-    assign mst_addr = cpu_addr;
-    assign mst_wdata = cpu_wdata;
-    assign mst_we = cpu_we;
-    assign cpu_rd_data = (slv_ready && p_enable) ? slv_rd_data : 0;
+    reg [`BUS_STATE_WIDTH -1 : 0]nx_state;
+    assign mst_addr = state != `BUS_STATE_IDLE ? cpu_addr : 0;
+    assign mst_wdata = state != `BUS_STATE_IDLE ? cpu_wdata : 0;
+    assign mst_we = state != `BUS_STATE_IDLE ? cpu_we: 1'b0;
     assign extern_data_ready = (slv_ready && p_enable) ? 1 : 0;
-
-    always@(posedge clk or negedge rst_n)
-        if (!rst_n || (cpu_flush_bus && (!mst_we))) begin
+    assign cpu_rd_data = extern_data_ready ? slv_rd_data : 0;
+    assign p_enable = state == `BUS_STATE_PENABLE;
+    assign ex_bus_idle = (state == `BUS_STATE_IDLE) & !mst_we;
+    always @(posedge clk or negedge rst_n)
+        if (!rst_n)
             state <= `BUS_STATE_IDLE;
-            p_enable <= 1'b0;
-        end
-        else begin
-            case(state)
-                `BUS_STATE_IDLE: begin
-                    p_enable    <= 1'b0;
-                    if (cpu_addr) begin
-                        state       <= `BUS_STATE_SETUP;
-                    end
+        else
+            state <= nx_state;
+
+    always @(*) begin
+        case (state)
+            `BUS_STATE_IDLE: begin
+                if (cpu_addr) begin
+                    nx_state = `BUS_STATE_SETUP;
+                end else begin
+                    nx_state = `BUS_STATE_IDLE;
                 end
-                `BUS_STATE_SETUP: begin
-                    p_enable    <= 1'b1;
-                    state       <= `BUS_STATE_PENABLE;
+            end
+            `BUS_STATE_SETUP: begin
+                nx_state = `BUS_STATE_PENABLE;
+            end
+            `BUS_STATE_PENABLE: begin
+                if (slv_ready | cpu_flush_bus) begin
+                    nx_state = `BUS_STATE_IDLE;
+                end else begin
+                    nx_state = `BUS_STATE_PENABLE;
                 end
-                `BUS_STATE_PENABLE: begin
-                    if (slv_ready) begin
-                        state <= `BUS_STATE_IDLE;
-                        p_enable <= 1'b0;
-                    end else begin
-                        state <= state;
-                        p_enable <= p_enable;
-                    end
-                end
-                default: begin
-                    state <= `BUS_STATE_IDLE;
-                end
-            endcase
-        end
+            end
+            default: begin
+                nx_state = `BUS_STATE_IDLE;
+            end
+        endcase
+    end
 endmodule
