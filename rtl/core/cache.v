@@ -7,7 +7,7 @@ module cache_way #(
     input rst_n,
     input update_cacheline,
     input [CACHELINE_SIZE * 8 -1: 0]cacheline_data,
-    input [`REG_WIDTH -1: 0]current_pc,
+    input [`REG_WIDTH -1: 0]addr,
     input read_en,
     input write_en,
     input [`REG_WIDTH - 1: 0]write_data,
@@ -29,16 +29,16 @@ module cache_way #(
     reg [CACHELINES - 1: 0]valid;
     reg [CACHE_OFFSET_TAG_WIDTH - 1: 0]tag_data[0: CACHELINES - 1];
     reg [CACHELINE_SIZE * 8 -1: 0]data[0: CACHELINES - 1];
-    assign tag = current_pc[`REG_WIDTH-1: `REG_WIDTH - CACHE_OFFSET_TAG_WIDTH];
-    assign index = current_pc[CACHE_INDEX_WIDTH + CACHE_OFFSET_WIDTH -1: CACHE_OFFSET_WIDTH];
-    assign offset = current_pc[CACHE_OFFSET_WIDTH -1: 0];
+    assign tag = addr[`REG_WIDTH-1: `REG_WIDTH - CACHE_OFFSET_TAG_WIDTH];
+    assign index = addr[CACHE_INDEX_WIDTH + CACHE_OFFSET_WIDTH -1: CACHE_OFFSET_WIDTH];
+    assign offset = addr[CACHE_OFFSET_WIDTH -1: 0];
     assign offset_base = offset << 3;
     assign hit = (read_en | write_en) & valid[index] & (tag_data[index] == tag);
     assign read_data = !hit ? 0:
                         size == 2'b00 ? {{(`REG_WIDTH - 8 ){1'b0}}, {data[index][offset_base +: 8]}}:
                         size == 2'b01 ? {{(`REG_WIDTH - 16 << 3){1'b0}}, {data[index][offset_base +: 16]}}:
                         {{(`REG_WIDTH- 32){1'b0}}, {data[index][offset_base +: 32]}};
-    assign dirty_status = update_cacheline & dirty[index];
+    assign dirty_status = dirty[index];
     assign dirty_data = data[index];
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
@@ -81,7 +81,7 @@ module cache #(
     input rst_n,
     input update_cacheline,
     input [CACHELINE_SIZE * 8 -1: 0]cacheline_data,
-    input [`REG_WIDTH -1: 0]current_pc,
+    input [`REG_WIDTH -1: 0]addr,
     input read_en,
     input write_en,
     input [`REG_WIDTH -1:0]write_data,
@@ -109,12 +109,12 @@ module cache #(
     reg [1:0]state;
     reg [1:0]nx_state;
 
-    assign cacheline_align_pc = current_pc & ~(CACHELINE_SIZE - 1);
+    assign cacheline_align_pc = addr & ~(CACHELINE_SIZE - 1);
     assign hit = |hit_ways;
     assign dirty_status = |dirty_status_ways;
     assign cur_state = state;
     reg  [2 << DEPTH - 2: 0]plru_bits[0: CACHELINES -1]; //4 路的plru bits
-    assign index = current_pc[CACHE_INDEX_WIDTH + CACHE_OFFSET_WIDTH -1: CACHE_OFFSET_WIDTH];
+    assign index = addr[CACHE_INDEX_WIDTH + CACHE_OFFSET_WIDTH -1: CACHE_OFFSET_WIDTH];
     assign dirty_data = dirty_status_ways[0] ? dirty_data_ways[0]:
                         dirty_status_ways[1] ? dirty_data_ways[1]:
                         dirty_status_ways[2] ? dirty_data_ways[2]:
@@ -208,7 +208,7 @@ module cache #(
                     .rst_n(rst_n),
                     .update_cacheline(update_cacheline_onehot[i]),
                     .cacheline_data(cacheline_data),
-                    .current_pc(current_pc),
+                    .addr(addr),
                     .read_en(read_en),
                     .write_en(write_en),
                     .write_data(write_data),

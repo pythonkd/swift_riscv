@@ -57,13 +57,13 @@ module addr_mux(
     wire external_grant_mem;
     reg [`REG_WIDTH -1: 0]cacheline_align_pc;
 
-    wire inst_dirty_status;
-    wire inst_hit;
-    wire inst_read_en;
+    wire icache_dirty_status;
+    wire icache_hit;
+    wire icache_read_en;
 
-    reg [`REG_WIDTH -1: 0]inst_cache_read_data;
-    wire inst_update_cacheline;
-    wire [2:0]inst_cache_state;
+    reg [`REG_WIDTH -1: 0]icache_read_data;
+    wire icache_update_cacheline;
+    wire [2:0]icache_state;
     wire [`REG_WIDTH -1: 0]cpu_to_icache_addr;
     reg [7:0] counter;
     reg [`REG_WIDTH -1: 0]cache_request_ex_addr;
@@ -78,9 +78,9 @@ module addr_mux(
     end
 
     always @(*) begin
-        if (inst_cache_state == `CACHE_IDLE) begin
+        if (icache_state == `CACHE_IDLE) begin
             nx_cache_request_ex_addr = cpu_to_icache_addr;
-        end else if (inst_cache_state == `CACHE_WAIT_UPDATE) begin
+        end else if (icache_state == `CACHE_WAIT_UPDATE) begin
             nx_cache_request_ex_addr = cacheline_align_pc + counter;
         end else begin
             nx_cache_request_ex_addr = 0;
@@ -90,11 +90,11 @@ module addr_mux(
     always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             counter <= 7'b0;
-        end else if (inst_cache_state == `CACHE_IDLE) begin
+        end else if (icache_state == `CACHE_IDLE) begin
             counter <= 7'b0;
-        end else if ((inst_cache_state == `CACHE_WAIT_UPDATE) & extern_data_ready & (counter < (`CACHELINE_SIZE))) begin
+        end else if ((icache_state == `CACHE_WAIT_UPDATE) & extern_data_ready & (counter < (`CACHELINE_SIZE))) begin
             counter <= counter + 7'd4;
-        end else if ((inst_cache_state == `CACHE_WAIT_UPDATE) & extern_data_ready & (counter == (`CACHELINE_SIZE))) begin
+        end else if ((icache_state == `CACHE_WAIT_UPDATE) & extern_data_ready & (counter == (`CACHELINE_SIZE))) begin
             counter <= 7'b0;
         end else begin
             counter <= counter;
@@ -126,38 +126,38 @@ module addr_mux(
         // input
         .clk(clk),
         .rst_n(rst_n),
-        .update_cacheline(inst_update_cacheline),
+        .update_cacheline(icache_update_cacheline),
         .cacheline_data(cacheline_data),
-        .current_pc(cpu_to_icache_addr),
-        .read_en(inst_read_en),
+        .addr(cpu_to_icache_addr),
+        .read_en(icache_read_en),
         .write_en(1'b0),
         .write_data('b0),
         .size(2'b10),
         .save_dirty_data_done(1'b0),
         // output
-        .hit(inst_hit),
-        .read_data(inst_cache_read_data),
-        .dirty_status(inst_dirty_status),
-        .cur_state(inst_cache_state),
+        .hit(icache_hit),
+        .read_data(icache_read_data),
+        .dirty_status(icache_dirty_status),
+        .cur_state(icache_state),
         .dirty_data()
     );
     assign external_grant_mem = mem_need_external & mem_req_valid;
-    assign inst_update_cacheline = (counter == (`CACHELINE_SIZE)) & extern_data_ready & (inst_cache_state == `CACHE_WAIT_UPDATE);
+    assign icache_update_cacheline = (counter == (`CACHELINE_SIZE)) & extern_data_ready & (icache_state == `CACHE_WAIT_UPDATE);
     assign if_need_external  = instruction_addr >= `ILM_END_ADDR;
-    assign bus_stall_cpu = if_need_external & !inst_hit;
-    assign instruction = !if_need_external ? ilm_to_cpu_inst_data: inst_hit ? inst_cache_read_data : 0;
+    assign bus_stall_cpu = if_need_external & !icache_hit;
+    assign instruction = !if_need_external ? ilm_to_cpu_inst_data: icache_hit ? icache_read_data : 0;
     assign cpu_to_icache_addr = if_need_external ? instruction_addr : 0;
     assign cpu_to_ilm_rd_inst_addr = !if_need_external ? instruction_addr : 0;
     assign cacheline_align_pc = cpu_to_icache_addr & ~(`CACHELINE_SIZE - 1);
-    assign instruction_valid = !if_need_external ? 1'b1 : inst_hit;
-    assign inst_read_en = if_need_external;
+    assign instruction_valid = !if_need_external ? 1'b1 : icache_hit;
+    assign icache_read_en = if_need_external;
 
     assign mem_need_external = (mem_addr >= `CLINT_END_ADDR);
     assign bus_stall_ex = mem_need_external & !extern_data_ready;
     assign mem_rd_valid = !mem_need_external ? 1'b1 : extern_data_ready;
     assign cpu_wr_external_en = external_grant_mem ? data_we : 1'b0;
     assign cpu_to_external_addr = external_grant_mem ? mem_addr :
-                                    (inst_cache_state == `CACHE_WAIT_UPDATE) ? cache_request_ex_addr : {`REG_WIDTH{1'b0}};
+                                    (icache_state == `CACHE_WAIT_UPDATE) ? cache_request_ex_addr : {`REG_WIDTH{1'b0}};
     // mem type: cpu --> ilm
     assign cpu_to_external_data = external_grant_mem ? mem_wr_data : {`REG_WIDTH{1'b0}};
     wire cpu_to_ilm;
