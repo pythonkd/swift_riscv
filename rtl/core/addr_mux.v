@@ -71,23 +71,6 @@ module addr_mux(
     reg [`CACHELINE_SIZE * 8 -1: 0]cacheline_data;
 
     always @(posedge clk or negedge rst_n) begin
-        if (!rst_n)
-            cache_request_ex_addr <= `REG_WIDTH'b0;
-        else
-            cache_request_ex_addr <= nx_cache_request_ex_addr;
-    end
-
-    always @(*) begin
-        if (icache_state == `CACHE_IDLE) begin
-            nx_cache_request_ex_addr = cpu_to_icache_addr;
-        end else if (icache_state == `CACHE_WAIT_UPDATE) begin
-            nx_cache_request_ex_addr = cacheline_align_pc + counter;
-        end else begin
-            nx_cache_request_ex_addr = 0;
-        end
-    end
-
-    always @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             counter <= 7'b0;
         end else if (icache_state == `CACHE_IDLE) begin
@@ -148,18 +131,15 @@ module addr_mux(
     assign instruction = !if_need_external ? ilm_to_cpu_inst_data: icache_hit ? icache_read_data : 0;
     assign cpu_to_icache_addr = if_need_external ? instruction_addr : 0;
     assign cpu_to_ilm_rd_inst_addr = !if_need_external ? instruction_addr : 0;
-    assign cacheline_align_pc = cpu_to_icache_addr & ~(`CACHELINE_SIZE - 1);
+
     assign instruction_valid = !if_need_external ? 1'b1 : icache_hit;
     assign icache_read_en = if_need_external;
 
     assign mem_need_external = (mem_addr >= `CLINT_END_ADDR);
     assign bus_stall_ex = mem_need_external & !extern_data_ready;
     assign mem_rd_valid = !mem_need_external ? 1'b1 : extern_data_ready;
-    assign cpu_wr_external_en = external_grant_mem ? data_we : 1'b0;
-    assign cpu_to_external_addr = external_grant_mem ? mem_addr :
-                                    (icache_state == `CACHE_WAIT_UPDATE) ? cache_request_ex_addr : {`REG_WIDTH{1'b0}};
+
     // mem type: cpu --> ilm
-    assign cpu_to_external_data = external_grant_mem ? mem_wr_data : {`REG_WIDTH{1'b0}};
     wire cpu_to_ilm;
     assign cpu_to_ilm = mem_req_valid && (~mem_need_external) && (mem_addr < `ILM_END_ADDR);
     assign cpu_wr_ilm_en = cpu_to_ilm && data_we;
@@ -192,4 +172,106 @@ module addr_mux(
                 cpu_to_dlm ? dlm_to_cpu_data:
                 cpu_to_mtimer ? mtimer_to_cpu_data:
                 cpu_to_clint ? clint_to_cpu_data: 0;
+
+    wire data_update_cacheline;
+    wire [`REG_WIDTH -1: 0]cpu_to_dcache_addr;
+    wire dcache_read_en;
+    wire dcache_write_en;
+    wire dcache_hit;
+    wire [`REG_WIDTH -1:0]dcache_write_data;
+    wire dcache_save_dirty_data_done;
+    reg [`REG_WIDTH -1: 0]dcache_read_data;
+    wire data_dirty_status;
+    wire [2:0]dcache_state;
+    reg [`CACHELINE_SIZE * 8 -1: 0]dcache_dirty_data;
+    wire is_dcache_region;
+    wire is_ex_noncache_region;
+    reg [7:0] dcache_counter;
+    reg [`CACHELINE_SIZE * 8 -1: 0]dcacheline_data;
+    cache #(
+        .WAYS(4),
+        .CACHELINE_SIZE(`CACHELINE_SIZE),
+        .CACHESIZE(`INST_CACHESIZE)
+    ) u_dcache (
+        // input
+        .clk(clk),
+        .rst_n(rst_n),
+        .update_cacheline(data_update_cacheline),
+        .cacheline_data(dcacheline_data),
+        .addr(cpu_to_dcache_addr),
+        .read_en(dcache_read_en),
+        .write_en(dcache_write_en),
+        .write_data(dcache_write_data),
+        .size(2'b10),
+        .save_dirty_data_done(1'b0),
+        // output
+        .hit(dcache_hit),
+        .read_data(dcache_read_data),
+        .dirty_status(data_dirty_status),
+        .cur_state(dcache_state),
+        .dirty_data(dcache_dirty_data)
+    );
+    assign is_dcache_region = (mem_addr >= `FLASH_ADDR_BASE) & (mem_addr < `FLASH_END_ADDR) & mem_req_valid;
+    assign is_ex_noncache_region = mem_need_external & !is_dcache_region;
+    assign dcache_write_en = is_dcache_region & data_we;
+    assign dcache_read_en = is_dcache_region & !data_we; //DCACHE暂时只缓存flash
+    assign cpu_to_dcache_addr = (dcache_read_en | dcache_write_en) ? mem_addr: 0;
+    assign cacheline_align_pc = is_dcache_region ? cpu_to_dcache_addr & ~(`CACHELINE_SIZE - 1): cpu_to_icache_addr & ~(`CACHELINE_SIZE - 1);
+    assign data_update_cacheline = (counter == (`CACHELINE_SIZE)) & extern_data_ready & (dcache_state == `CACHE_WAIT_UPDATE);
+    assign dcache_write_data = dcache_write_en ? mem_wr_data : 0;
+    assign cpu_to_external_data = is_ex_noncache_region ? mem_wr_data : {`REG_WIDTH{1'b0}};
+
+    assign cpu_wr_external_en = (dcache_write_en & !dcache_hit) | (data_we & is_ex_noncache_region);
+    assign cpu_to_external_addr = (icache_state == `CACHE_WAIT_UPDATE) || (dcache_state == `CACHE_WAIT_UPDATE) ? cache_request_ex_addr : 
+                                                                                            is_ex_noncache_region ? mem_addr :{`REG_WIDTH{1'b0}};
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n)
+            cache_request_ex_addr <= `REG_WIDTH'b0;
+        else
+            cache_request_ex_addr <= nx_cache_request_ex_addr;
+    end
+
+    always @(*) begin
+        if ((icache_state == `CACHE_IDLE) || (is_dcache_region & (dcache_state == `CACHE_IDLE))) begin
+            nx_cache_request_ex_addr = is_dcache_region ? cpu_to_dcache_addr : cpu_to_icache_addr;
+        end else if ((icache_state == `CACHE_WAIT_UPDATE) || ((dcache_state == `CACHE_WAIT_UPDATE))) begin
+            nx_cache_request_ex_addr = cacheline_align_pc + counter;
+        end else begin
+            nx_cache_request_ex_addr = 0;
+        end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            dcache_counter <= 7'b0;
+        end else if (dcache_state == `CACHE_IDLE) begin
+            dcache_counter <= 7'b0;
+        end else if ((dcache_state == `CACHE_WAIT_UPDATE) & extern_data_ready & (counter < (`CACHELINE_SIZE))) begin
+            dcache_counter <= dcache_counter + 7'd4;
+        end else if ((dcache_state == `CACHE_WAIT_UPDATE) & extern_data_ready & (counter == (`CACHELINE_SIZE))) begin
+            dcache_counter <= 7'b0;
+        end else begin
+            dcache_counter <= dcache_counter;
+        end
+    end
+
+    always @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            dcacheline_data <= 'b0;
+        end else begin
+            case (dcache_counter)
+                7'd0: dcacheline_data[31:0] <= external_to_cpu_rd_data;
+                7'd4: dcacheline_data[63:32] <= external_to_cpu_rd_data;
+                7'd8: dcacheline_data[95:64] <= external_to_cpu_rd_data;
+                7'd12: dcacheline_data[127:96] <= external_to_cpu_rd_data;
+                7'd16: dcacheline_data[159:128] <= external_to_cpu_rd_data;
+                7'd20: dcacheline_data[191:160] <= external_to_cpu_rd_data;
+                7'd24: dcacheline_data[223:192] <= external_to_cpu_rd_data;
+                7'd28: dcacheline_data[255:224] <= external_to_cpu_rd_data;
+                default: dcacheline_data <= dcacheline_data;
+            endcase
+        end
+    end
+
 endmodule
